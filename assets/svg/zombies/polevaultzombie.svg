@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100">
+  <style>
+    @keyframes run { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#5a7a4a; }
+    .pants { fill:#4a4a2a; }
+    .eye { fill:#fff; }
+    .pupil { fill:#c00; }
+    .pole { fill:#8B6914; }
+    .run { animation: run 0.4s ease-in-out infinite; transform-origin: 30px 50px; }
+  </style>
+  <g class="run">
+    <circle class="skin" cx="30" cy="18" r="14"/>
+    <!-- 头带 -->
+    <rect fill="#cc0000" x="16" y="10" width="28" height="4" rx="1"/>
+    <circle class="eye" cx="25" cy="16" r="4"/>
+    <circle class="eye" cx="35" cy="16" r="4"/>
+    <circle class="pupil" cx="26" cy="16" r="2"/>
+    <circle class="pupil" cx="36" cy="16" r="2"/>
+    <ellipse cx="30" cy="24" rx="6" ry="3" fill="#4a3a2a"/>
+    <rect class="shirt" x="18" y="30" width="24" height="28" rx="3"/>
+    <!-- 撑杆 -->
+    <rect class="pole" x="48" y="10" width="4" height="70" rx="2" transform="rotate(-15,50,45)"/>
+    <!-- 手臂 -->
+    <rect class="skin" x="10" y="32" width="8" height="20" rx="3" transform="rotate(15,14,32)"/>
+    <rect class="skin" x="42" y="32" width="8" height="20" rx="3" transform="rotate(-20,46,32)"/>
+    <rect class="pants" x="20" y="56" width="8" height="25" rx="3"/>
+    <rect class="pants" x="32" y="56" width="8" height="25" rx="3"/>
+    <rect fill="#3a3a1a" x="18" y="78" width="12" height="6" rx="2"/>
+    <rect fill="#3a3a1a" x="30" y="78" width="12" height="6" rx="2"/>
+  </g>
+</svg>

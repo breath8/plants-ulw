@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <style>
+    @keyframes ready { 0%,70%{transform:translateY(5px); opacity:0.7} 80%{transform:translateY(0); opacity:1} 100%{transform:translateY(0); opacity:1} }
+    .body { fill:#8B6914; }
+    .dark { fill:#6B4F10; }
+    .eye { fill:#fff; }
+    .pupil { fill:#000; }
+    .fuse { fill:#4a8c2a; }
+    .dirt { fill:#5a4020; }
+    .ready { animation: ready 3s ease-in-out infinite; }
+  </style>
+  <!-- 土堆 -->
+  <ellipse class="dirt" cx="40" cy="80" rx="30" ry="10"/>
+  <!-- 土豆身体 -->
+  <g class="ready">
+    <ellipse class="body" cx="40" cy="55" rx="22" ry="28"/>
+    <ellipse class="dark" cx="40" cy="55" rx="18" ry="22" opacity="0.2"/>
+    <!-- 纹理 -->
+    <circle class="dark" cx="30" cy="45" r="3" opacity="0.3"/>
+    <circle class="dark" cx="50" cy="50" r="2" opacity="0.3"/>
+    <circle class="dark" cx="35" cy="65" r="2.5" opacity="0.3"/>
+    <!-- 眼睛 -->
+    <circle class="eye" cx="34" cy="48" r="4"/>
+    <circle class="pupil" cx="35" cy="48" r="2"/>
+    <circle class="eye" cx="46" cy="48" r="4"/>
+    <circle class="pupil" cx="47" cy="48" r="2"/>
+    <!-- 生气的表情 -->
+    <path d="M35,58 Q40,55 45,58" stroke="#3a2500" stroke-width="2" fill="none"/>
+    <!-- 引线 -->
+    <path class="fuse" d="M40,28 Q42,20 48,18 Q52,16 50,12" stroke="#4a8c2a" stroke-width="2" fill="none"/>
+    <circle fill="#ff6600" cx="50" cy="12" r="3">
+      <animate attributeName="r" values="2;4;2" dur="0.5s" repeatCount="indefinite"/>
+      <animate attributeName="fill" values="#ff6600;#ff0;#ff6600" dur="0.3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <style>
+    @keyframes jaw { 0%,70%,100%{transform:rotate(0)} 80%{transform:rotate(-15deg)} 90%{transform:rotate(0)} }
+    @keyframes sway { 0%,100%{transform:rotate(-1deg)} 50%{transform:rotate(1deg)} }
+    .stem { fill:#4a5a2a; }
+    .head-top { fill:#6a4a8a; }
+    .head-bottom { fill:#5a3a7a; }
+    .tooth { fill:#fff; }
+    .eye { fill:#fff; }
+    .pupil { fill:#ff0; }
+    .dark { fill:#3a2a5a; }
+    .sway { animation: sway 2s ease-in-out infinite; transform-origin: 40px 85px; }
+  </style>
+  <g class="sway">
+    <rect class="stem" x="36" y="60" width="8" height="25" rx="3"/>
+    <ellipse class="dark" cx="28" cy="70" rx="10" ry="4" transform="rotate(-20,28,70)"/>
+    <!-- 上颚 -->
+    <g>
+      <ellipse class="head-top" cx="40" cy="35" rx="25" ry="18"/>
+      <ellipse class="eye" cx="30" cy="30" rx="5" ry="6"/>
+      <circle class="pupil" cx="31" cy="30" r="3"/>
+      <ellipse class="eye" cx="50" cy="30" rx="5" ry="6"/>
+      <circle class="pupil" cx="51" cy="30" r="3"/>
+      <!-- 上牙 -->
+      <polygon class="tooth" points="22,45 25,55 28,45"/>
+      <polygon class="tooth" points="32,45 35,55 38,45"/>
+      <polygon class="tooth" points="42,45 45,55 48,45"/>
+      <polygon class="tooth" points="52,45 55,55 58,45"/>
+    </g>
+    <!-- 下颚 -->
+    <g style="animation: jaw 2s ease-in-out infinite; transform-origin: 40px 50px;">
+      <ellipse class="head-bottom" cx="40" cy="52" rx="22" ry="12"/>
+      <!-- 下牙 -->
+      <polygon class="tooth" points="25,48 28,42 31,48" transform="rotate(180,28,45)"/>
+      <polygon class="tooth" points="35,48 38,42 41,48" transform="rotate(180,38,45)"/>
+      <polygon class="tooth" points="45,48 48,42 51,48" transform="rotate(180,48,45)"/>
+    </g>
+    <!-- 唾液 -->
+    <ellipse fill="#6a4a8a" cx="35" cy="58" rx="2" ry="4" opacity="0.6">
+      <animate attributeName="ry" values="2;5;2" dur="1.5s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+</svg>

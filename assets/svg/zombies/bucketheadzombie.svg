@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100">
+  <style>
+    @keyframes walk { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#8B6914; }
+    .pants { fill:#4a4a2a; }
+    .eye { fill:#fff; }
+    .pupil { fill:#c00; }
+    .bucket { fill:#8a8a8a; }
+    .bucket-dark { fill:#6a6a6a; }
+    .bucket-rim { fill:#aaa; }
+    .walk { animation: walk 0.6s ease-in-out infinite; transform-origin: 30px 50px; }
+  </style>
+  <g class="walk">
+    <circle class="skin" cx="30" cy="18" r="14"/>
+    <!-- 铁桶 -->
+    <rect class="bucket" x="15" y="2" width="30" height="25" rx="2"/>
+    <rect class="bucket-dark" x="17" y="4" width="26" height="21" rx="1" opacity="0.3"/>
+    <rect class="bucket-rim" x="14" y="2" width="32" height="4" rx="1"/>
+    <line x1="18" y1="10" x2="42" y2="10" stroke="#6a6a6a" stroke-width="1"/>
+    <line x1="18" y1="16" x2="42" y2="16" stroke="#6a6a6a" stroke-width="1"/>
+    <circle class="eye" cx="25" cy="16" r="4"/>
+    <circle class="eye" cx="35" cy="16" r="4"/>
+    <circle class="pupil" cx="26" cy="16" r="2"/>
+    <circle class="pupil" cx="36" cy="16" r="2"/>
+    <ellipse cx="30" cy="24" rx="6" ry="3" fill="#4a3a2a"/>
+    <rect class="shirt" x="18" y="30" width="24" height="28" rx="3"/>
+    <polygon fill="#6a4a0a" points="30,30 26,45 30,42 34,45"/>
+    <rect class="skin" x="10" y="32" width="8" height="25" rx="3" transform="rotate(10,14,32)"/>
+    <rect class="skin" x="42" y="32" width="8" height="25" rx="3" transform="rotate(-15,46,32)"/>
+    <rect class="pants" x="20" y="56" width="8" height="25" rx="3"/>
+    <rect class="pants" x="32" y="56" width="8" height="25" rx="3"/>
+    <rect fill="#3a3a1a" x="18" y="78" width="12" height="6" rx="2"/>
+    <rect fill="#3a3a1a" x="30" y="78" width="12" height="6" rx="2"/>
+  </g>
+</svg>

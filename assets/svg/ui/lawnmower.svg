@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes mow { 0%,100%{transform:translateX(0)} 50%{transform:translateX(2px)} }
+    .mow { animation: mow 0.2s linear infinite; }
+  </style>
+  <g class="mow">
+    <rect x="5" y="20" width="40" height="25" rx="3" fill="#888"/>
+    <rect x="7" y="22" width="36" height="21" rx="2" fill="#999"/>
+    <circle cx="15" cy="45" r="8" fill="#555"/>
+    <circle cx="15" cy="45" r="4" fill="#777"/>
+    <circle cx="35" cy="45" r="8" fill="#555"/>
+    <circle cx="35" cy="45" r="4" fill="#777"/>
+    <rect x="42" y="25" width="12" height="8" rx="2" fill="#cc3333"/>
+    <!-- 刀片 -->
+    <rect x="48" y="30" width="10" height="3" rx="1" fill="#aaa"/>
+  </g>
+</svg>

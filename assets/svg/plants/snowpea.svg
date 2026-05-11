@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <style>
+    @keyframes sway { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+    @keyframes sparkle { 0%,100%{opacity:0.3} 50%{opacity:1} }
+    .stem { fill:#2a6a8c; }
+    .head { fill:#4aa8d8; }
+    .dark { fill:#1a5a7c; }
+    .ice { fill:#b8e8ff; }
+    .eye { fill:#fff; }
+    .pupil { fill:#000; }
+    .mouth { fill:#1a4a6c; }
+    .sparkle { animation: sparkle 1s ease-in-out infinite; }
+    .sway { animation: sway 1.5s ease-in-out infinite; transform-origin: 40px 80px; }
+  </style>
+  <g class="sway">
+    <rect class="stem" x="36" y="55" width="8" height="30" rx="3"/>
+    <ellipse class="dark" cx="28" cy="65" rx="12" ry="5" transform="rotate(-30,28,65)"/>
+    <ellipse class="dark" cx="52" cy="70" rx="12" ry="5" transform="rotate(30,52,70)"/>
+    <circle class="head" cx="40" cy="40" r="22"/>
+    <ellipse class="dark" cx="56" cy="42" rx="10" ry="8"/>
+    <ellipse class="eye" cx="35" cy="34" rx="7" ry="8"/>
+    <circle class="pupil" cx="37" cy="34" r="4"/>
+    <ellipse class="mouth" cx="54" cy="42" rx="8" ry="3"/>
+    <!-- 冰晶效果 -->
+    <circle class="ice sparkle" cx="28" cy="30" r="2"/>
+    <circle class="ice sparkle" cx="50" cy="28" r="2" style="animation-delay:0.3s"/>
+    <circle class="ice sparkle" cx="22" cy="42" r="1.5" style="animation-delay:0.6s"/>
+    <circle class="ice sparkle" cx="55" cy="48" r="1.5" style="animation-delay:0.9s"/>
+    <!-- 冰霜纹理 -->
+    <path d="M30,35 L25,30 L27,28" stroke="#b8e8ff" stroke-width="1" fill="none" class="sparkle"/>
+    <path d="M50,30 L55,25 L53,23" stroke="#b8e8ff" stroke-width="1" fill="none" class="sparkle" style="animation-delay:0.5s"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
+  <style>
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    .spin { animation: spin 3s linear infinite; transform-origin: 25px 25px; }
+  </style>
+  <g class="spin">
+    <circle cx="25" cy="25" r="18" fill="#FFD700"/>
+    <circle cx="25" cy="25" r="14" fill="#FFEC8B"/>
+    <text x="25" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#CC8800">☀</text>
+  </g>
+</svg>
