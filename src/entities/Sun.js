@@ -10,6 +10,9 @@ class Sun extends Phaser.GameObjects.Container {
         this.collected = false;
         this.lifetime = SUN.lifetime;
 
+        // 设置深度确保在其他元素之上
+        this.setDepth(50);
+
         // 创建阳光图形
         this.createVisual();
 
@@ -18,8 +21,10 @@ class Sun extends Phaser.GameObjects.Container {
         this.setInteractive(new Phaser.Geom.Circle(0, 0, 25), Phaser.Geom.Circle.Contains);
 
         // 点击收集
-        this.on('pointerdown', () => {
-            this.collect();
+        this.on('pointerdown', (pointer, localX, localY, event) => {
+            if (!this.collected) {
+                this.collect();
+            }
         });
 
         // 下落动画

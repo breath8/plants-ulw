@@ -176,6 +176,7 @@ class GameScene extends Phaser.Scene {
 
     createPlantCard(x, y, plantType, cfg, width, height) {
         const container = this.add.container(x, y);
+        container.setDepth(10);
 
         // 卡片背景
         const bg = this.add.graphics();
@@ -184,6 +185,13 @@ class GameScene extends Phaser.Scene {
         bg.fillStyle(0x7B4F2A);
         bg.fillRoundedRect(2, 2, width - 4, height - 25, 4);
         container.add(bg);
+
+        // 选中高亮边框（默认隐藏）
+        const selectBorder = this.add.graphics();
+        selectBorder.fillStyle(0xFFD700, 0.4);
+        selectBorder.fillRoundedRect(-2, -2, width + 4, height + 4, 6);
+        selectBorder.setVisible(false);
+        container.add(selectBorder);
 
         // 植物预览
         const preview = this.createPlantPreview(plantType, width / 2, 25);
@@ -206,6 +214,7 @@ class GameScene extends Phaser.Scene {
         // 交互区域
         const zone = this.add.zone(x + width / 2, y + height / 2, width, height)
             .setInteractive({ useHandCursor: true });
+        zone.setDepth(20);
 
         zone.on('pointerdown', () => {
             this.onCardClick(plantType, container, cfg, cooldownMask);
@@ -213,26 +222,19 @@ class GameScene extends Phaser.Scene {
 
         zone.on('pointerover', () => {
             if (!cooldownMask.visible && this.sunAmount >= cfg.cost) {
-                bg.clear();
-                bg.fillStyle(0x6B4A28);
-                bg.fillRoundedRect(0, 0, width, height, 5);
-                bg.fillStyle(0x8B5F35);
-                bg.fillRoundedRect(2, 2, width - 4, height - 25, 4);
+                container.setScale(1.05);
             }
         });
 
         zone.on('pointerout', () => {
-            bg.clear();
-            bg.fillStyle(0x5C3A1E);
-            bg.fillRoundedRect(0, 0, width, height, 5);
-            bg.fillStyle(0x7B4F2A);
-            bg.fillRoundedRect(2, 2, width - 4, height - 25, 4);
+            container.setScale(1);
         });
 
         return {
             type: plantType,
             container: container,
             bg: bg,
+            selectBorder: selectBorder,
             cooldownMask: cooldownMask,
             zone: zone,
             width: width,
@@ -434,10 +436,18 @@ class GameScene extends Phaser.Scene {
     }
 
     setupInput() {
-        // 草坪点击事件
-        this.input.on('pointerdown', (pointer) => {
+        // 启用topOnly模式 - 只有最顶层的交互对象响应点击
+        this.input.topOnly = true;
+
+        // 草坪点击事件 - 用于种植和铲子
+        // 注意：这会在没有其他交互对象被点击时触发
+        this.input.on('pointerdown', (pointer, currentlyOver) => {
             if (this.isGameOver || this.isPaused) return;
 
+            // 如果点击了阳光或其他交互对象，不处理草坪点击
+            if (currentlyOver && currentlyOver.length > 0) return;
+
+            // 只在草坪区域响应（排除UI区域）
             const cell = gridManager.getCellFromPosition(pointer.x, pointer.y);
             if (!cell) return;
 
@@ -459,7 +469,36 @@ class GameScene extends Phaser.Scene {
             }
         });
 
-        // 阳光收集 - 现在由Sun实体自己处理pointerdown
+        // 鼠标移动时显示种植预览
+        this.input.on('pointermove', (pointer) => {
+            this.updateCursorPreview(pointer.x, pointer.y);
+        });
+    }
+
+    updateCursorPreview(px, py) {
+        // 移除旧预览
+        if (this.cursorPreview) {
+            this.cursorPreview.destroy();
+            this.cursorPreview = null;
+        }
+
+        if (!this.selectedPlant) return;
+
+        const cell = gridManager.getCellFromPosition(px, py);
+        if (!cell) return;
+        if (gridManager.isOccupied(cell.row, cell.col)) return;
+
+        const pos = gridManager.getCellPosition(cell.row, cell.col);
+        this.cursorPreview = this.add.graphics();
+        this.cursorPreview.fillStyle(0xFFFFFF, 0.3);
+        this.cursorPreview.fillRoundedRect(
+            pos.x - GRID.cellWidth / 2 + 2,
+            pos.y - GRID.cellHeight / 2 + 2,
+            GRID.cellWidth - 4,
+            GRID.cellHeight - 4,
+            4
+        );
+        this.cursorPreview.setDepth(5);
     }
 
     setupCollisions() {
@@ -468,8 +507,14 @@ class GameScene extends Phaser.Scene {
 
     onCardClick(plantType, container, cfg, cooldownMask) {
         if (cooldownMask.visible) return;
-        if (this.sunAmount < cfg.cost) return;
 
+        // 清除所有卡片的选中状态
+        this.plantCards.forEach(card => {
+            card.selectBorder.setVisible(false);
+            card.container.setScale(1);
+        });
+
+        // 取消铲子
         this.shovelActive = false;
         if (this.shovelButton) {
             this.shovelButton.bg.clear();
@@ -479,7 +524,20 @@ class GameScene extends Phaser.Scene {
             this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
         }
 
+        // 如果点击的是已选中的植物，取消选择
+        if (this.selectedPlant === plantType) {
+            this.clearSelection();
+            return;
+        }
+
+        // 选中植物（允许选中，种植时再检查阳光）
         this.selectedPlant = plantType;
+
+        // 显示选中高亮
+        const card = this.plantCards.find(c => c.type === plantType);
+        if (card) {
+            card.selectBorder.setVisible(true);
+        }
     }
 
     placePlant(row, col) {
@@ -515,7 +573,36 @@ class GameScene extends Phaser.Scene {
         // 开始冷却
         this.startCooldown(this.selectedPlant);
 
+        // 清除选中状态
+        this.clearSelection();
+
+        // 更新卡片可用状态
+        this.updateCardAvailability();
+    }
+
+    clearSelection() {
         this.selectedPlant = null;
+
+        // 清除所有卡片选中高亮
+        this.plantCards.forEach(card => {
+            card.selectBorder.setVisible(false);
+            card.container.setScale(1);
+        });
+
+        // 清除预览
+        if (this.cursorPreview) {
+            this.cursorPreview.destroy();
+            this.cursorPreview = null;
+        }
+    }
+
+    updateCardAvailability() {
+        this.plantCards.forEach(card => {
+            const canAfford = this.sunAmount >= card.cfg.cost;
+            const isCooling = card.cooling;
+            // 降低不可用卡片的透明度
+            card.container.setAlpha((canAfford && !isCooling) ? 1 : 0.5);
+        });
     }
 
     removePlantAt(row, col) {
@@ -531,15 +618,18 @@ class GameScene extends Phaser.Scene {
 
         card.cooling = true;
         card.cooldownMask.setVisible(true);
+        this.updateCardAvailability();
 
         this.time.delayedCall(card.cfg.cooldown, () => {
             card.cooling = false;
             card.cooldownMask.setVisible(false);
+            this.updateCardAvailability();
         });
     }
 
     updateSunDisplay() {
         this.sunText.setText(String(this.sunAmount));
+        this.updateCardAvailability();
     }
 
     startNextWave() {
