@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物大战僵尸 - 复刻版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            width: 1024px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <script src="src/utils/Grid.js"></script>
+    <script src="src/data/levels.js"></script>
+    <script src="src/entities/Sun.js"></script>
+    <script src="src/entities/Projectile.js"></script>
+    <script src="src/entities/Plant.js"></script>
+    <script src="src/plants/Peashooter.js"></script>
+    <script src="src/plants/Sunflower.js"></script>
+    <script src="src/plants/Wallnut.js"></script>
+    <script src="src/plants/Snowpea.js"></script>
+    <script src="src/plants/CherryBomb.js"></script>
+    <script src="src/plants/Chomper.js"></script>
+    <script src="src/plants/Repeater.js"></script>
+    <script src="src/plants/PotatoMine.js"></script>
+    <script src="src/entities/Zombie.js"></script>
+    <script src="src/zombies/BasicZombie.js"></script>
+    <script src="src/zombies/FlagZombie.js"></script>
+    <script src="src/zombies/ConeheadZombie.js"></script>
+    <script src="src/zombies/BucketheadZombie.js"></script>
+    <script src="src/zombies/PoleVaultZombie.js"></script>
+    <script src="src/scenes/BootScene.js"></script>
+    <script src="src/scenes/MenuScene.js"></script>
+    <script src="src/scenes/LevelSelectScene.js"></script>
+    <script src="src/scenes/GameScene.js"></script>
+    <script src="src/scenes/VictoryScene.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html>
