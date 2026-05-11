@@ -12,6 +12,9 @@ class VictoryScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        // 重置相机状态
+        this.cameras.main.resetFX();
+
         // 背景
         const bg = this.add.graphics();
         bg.fillGradientStyle(0x1a1a2e, 0x16213e, 0x0f3460, 0x533483);
@@ -88,8 +91,6 @@ class VictoryScene extends Phaser.Scene {
         this.createButton(width / 2 + 100, 420, '返回菜单', 0x666666, () => {
             this.scene.start('MenuScene');
         });
-
-        this.cameras.main.fadeIn(300);
     }
 
     drawStar(graphics, cx, cy, points, outerRadius, innerRadius) {

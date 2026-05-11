@@ -9,6 +9,9 @@ class LevelSelectScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        // 重置相机状态
+        this.cameras.main.resetFX();
+
         // 从registry获取进度
         if (!this.registry.has('unlockedLevel')) {
             this.registry.set('unlockedLevel', 0);
@@ -77,8 +80,6 @@ class LevelSelectScene extends Phaser.Scene {
             font: '16px Arial',
             fill: '#CCCCCC'
         }).setOrigin(0.5, 0.5);
-
-        this.cameras.main.fadeIn(300);
     }
 
     createLevelButton(x, y, levelIndex, isUnlocked) {
@@ -144,10 +145,7 @@ class LevelSelectScene extends Phaser.Scene {
                 container.setScale(1);
             });
             zone.on('pointerdown', () => {
-                this.cameras.main.fadeOut(300);
-                this.cameras.main.once('camerafadeoutcomplete', () => {
-                    this.scene.start('GameScene', { level: levelIndex });
-                });
+                this.scene.start('GameScene', { level: levelIndex });
             });
         }
 

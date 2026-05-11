@@ -8,6 +8,9 @@ class MenuScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        // 重置相机状态
+        this.cameras.main.resetFX();
+
         // 背景
         const bg = this.add.graphics();
         // 天空渐变
@@ -108,10 +111,7 @@ class MenuScene extends Phaser.Scene {
         });
 
         btnZone.on('pointerdown', () => {
-            this.cameras.main.fadeOut(300, 0, 0, 0);
-            this.cameras.main.once('camerafadeoutcomplete', () => {
-                this.scene.start('LevelSelectScene');
-            });
+            this.scene.start('LevelSelectScene');
         });
 
         // 版本信息
@@ -141,7 +141,5 @@ class MenuScene extends Phaser.Scene {
         this.time.delayedCall(500, () => {
             this.tweens.add({ targets: [btnBg, btnText, btnZone], alpha: 1, duration: 300 });
         });
-
-        this.cameras.main.fadeIn(300);
     }
 }

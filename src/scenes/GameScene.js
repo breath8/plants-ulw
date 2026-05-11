@@ -27,7 +27,9 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        this.cameras.main.fadeIn(300);
+        // 重置相机状态（防止前一场景fadeOut残留）
+        this.cameras.main.resetFX();
+        this.cameras.main.setAlpha(1);
 
         // 重置网格
         gridManager.reset();
@@ -793,10 +795,7 @@ class GameScene extends Phaser.Scene {
         });
 
         this.time.delayedCall(1500, () => {
-            this.cameras.main.fadeOut(500);
-            this.cameras.main.once('camerafadeoutcomplete', () => {
-                this.scene.start('VictoryScene', { level: this.levelIndex });
-            });
+            this.scene.start('VictoryScene', { level: this.levelIndex });
         });
     }
 
