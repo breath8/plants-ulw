@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes flicker { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.15)} }
+    .trunk { fill:#6B4226; }
+    .trunk-dark { fill:#5A3520; opacity:0.5; }
+    .top { fill:#8B6040; }
+    .ring { stroke:#6B4226; fill:none; stroke-width:0.8; }
+    .flame1 { fill:#FF4400; opacity:0.8; }
+    .flame2 { fill:#FF8800; opacity:0.7; }
+    .flame3 { fill:#FFCC00; opacity:0.5; }
+    .flame { animation: flicker 0.3s ease-in-out infinite alternate; transform-origin: 30px 50px; }
+  </style>
+  <g>
+    <rect class="trunk" x="18" y="22" width="24" height="30" rx="3"/>
+    <line class="trunk-dark" x1="22" y1="30" x2="38" y2="30"/>
+    <line class="trunk-dark" x1="22" y1="38" x2="38" y2="38"/>
+    <line class="trunk-dark" x1="22" y1="44" x2="38" y2="44"/>
+    <ellipse class="top" cx="30" cy="22" rx="14" ry="5"/>
+    <ellipse class="ring" cx="30" cy="22" rx="10" ry="3.5"/>
+    <ellipse class="ring" cx="30" cy="22" rx="6" ry="2"/>
+    <g class="flame">
+      <polygon class="flame1" points="24,20 30,4 36,20"/>
+      <polygon class="flame2" points="27,20 30,8 33,20"/>
+      <polygon class="flame3" points="28,20 30,12 32,20"/>
+    </g>
+    <polygon class="flame1" points="20,20 16,10 24,20" opacity="0.6"/>
+    <polygon class="flame1" points="36,20 44,10 40,20" opacity="0.6"/>
+  </g>
+</svg>

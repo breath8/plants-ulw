@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- 杨桃 -->
+  <g>
+    <!-- 茎 -->
+    <rect fill="#4A8C2A" x="28" y="44" width="4" height="12" rx="2"/>
+    <!-- 叶子 -->
+    <ellipse fill="#3D7A1F" cx="22" cy="50" rx="6" ry="2.5"/>
+    <ellipse fill="#3D7A1F" cx="38" cy="52" rx="6" ry="2.5"/>
+    <!-- 五角星 -->
+    <polygon fill="#FFD700" points="30,6 36,22 54,22 40,33 46,50 30,40 14,50 20,33 6,22 24,22"/>
+    <!-- 高光 -->
+    <circle fill="#FFEC8B" cx="26" cy="22" r="5" opacity="0.5"/>
+    <!-- 眼睛 -->
+    <circle fill="#000" cx="26" cy="24" r="2.5"/>
+    <circle fill="#000" cx="34" cy="24" r="2.5"/>
+    <!-- 嘴 -->
+    <ellipse fill="#DAA520" cx="30" cy="30" rx="2.5" ry="1.5"/>
+  </g>
+</svg>

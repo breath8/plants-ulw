@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <!-- 坟墓破坏者 -->
+  <g>
+    <!-- 身体 - 白色骷髅头形状 -->
+    <ellipse fill="#E8E8E8" cx="40" cy="45" rx="22" ry="24"/>
+    <!-- 高光 -->
+    <ellipse fill="#F5F5F5" cx="36" cy="38" rx="14" ry="14"/>
+    <!-- 空洞的眼睛 -->
+    <ellipse fill="#1A1A2E" cx="30" cy="38" rx="6" ry="7"/>
+    <ellipse fill="#1A1A2E" cx="50" cy="38" rx="6" ry="7"/>
+    <!-- 眼睛内红点 -->
+    <circle fill="#CC2222" cx="31" cy="38" r="2"/>
+    <circle fill="#CC2222" cx="51" cy="38" r="2"/>
+    <!-- 鼻子 -->
+    <polygon fill="#1A1A2E" points="40,46 37,50 43,50"/>
+    <!-- 牙齿/嘴 -->
+    <rect fill="#1A1A2E" x="30" y="54" width="20" height="4" rx="2"/>
+    <line stroke="#E8E8E8" stroke-width="1.5" x1="34" y1="54" x2="34" y2="58"/>
+    <line stroke="#E8E8E8" stroke-width="1.5" x1="40" y1="54" x2="40" y2="58"/>
+    <line stroke="#E8E8E8" stroke-width="1.5" x1="46" y1="54" x2="46" y2="58"/>
+    <!-- 小手 -->
+    <rect fill="#E8E8E8" x="12" y="48" width="6" height="14" rx="3" transform="rotate(-15,15,55)"/>
+    <rect fill="#E8E8E8" x="62" y="48" width="6" height="14" rx="3" transform="rotate(15,65,55)"/>
+    <!-- 底部碎骨装饰 -->
+    <ellipse fill="#D0D0D0" cx="40" cy="70" rx="16" ry="6"/>
+  </g>
+</svg>

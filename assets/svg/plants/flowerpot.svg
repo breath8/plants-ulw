@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    .pot { fill:#8B4513; }
+    .inner { fill:#654321; opacity:0.5; }
+    .rim { fill:#A0522D; }
+    .soil { fill:#3E2723; }
+    .dot { fill:#4E342E; opacity:0.4; }
+    .line { fill:none; stroke:#7A3B10; opacity:0.3; stroke-width:0.8; }
+    .hole { fill:#3E2723; }
+  </style>
+  <g>
+    <path class="pot" d="M12,22 L48,22 L44,50 L16,50 Z"/>
+    <path class="inner" d="M14,24 L46,24 L43,48 L17,48 Z"/>
+    <rect class="rim" x="10" y="18" width="40" height="6" rx="2"/>
+    <ellipse class="soil" cx="30" cy="24" rx="16" ry="4"/>
+    <circle class="dot" cx="24" cy="23" r="1.5"/>
+    <circle class="dot" cx="34" cy="25" r="1"/>
+    <circle class="dot" cx="38" cy="22" r="1"/>
+    <line class="line" x1="14" y1="32" x2="46" y2="32"/>
+    <line class="line" x1="15" y1="40" x2="45" y2="40"/>
+    <circle class="hole" cx="30" cy="48" r="2"/>
+  </g>
+</svg>

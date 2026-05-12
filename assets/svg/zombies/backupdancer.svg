@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100">
+  <style>
+    @keyframes walk { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#9932CC; }
+    .pants { fill:#2F4F4F; }
+    .eye { fill:#fff; }
+    .pupil { fill:#c00; }
+    .headband { fill:#FF4500; }
+    .walk { animation: walk 0.6s ease-in-out infinite; transform-origin: 30px 50px; }
+  </style>
+  <g class="walk">
+    <circle class="skin" cx="30" cy="18" r="14"/>
+    <rect class="headband" x="16" y="12" width="28" height="5" rx="2"/>
+    <circle class="eye" cx="25" cy="16" r="4"/>
+    <circle class="eye" cx="35" cy="16" r="4"/>
+    <circle class="pupil" cx="26" cy="16" r="2"/>
+    <circle class="pupil" cx="36" cy="16" r="2"/>
+    <ellipse cx="30" cy="24" rx="6" ry="3" fill="#4a3a2a"/>
+    <rect class="shirt" x="18" y="30" width="24" height="28" rx="3"/>
+    <polygon fill="#DDA0DD" points="30,30 26,45 30,42 34,45"/>
+    <rect class="skin" x="10" y="32" width="8" height="25" rx="3" transform="rotate(10,14,32)"/>
+    <rect class="skin" x="42" y="32" width="8" height="25" rx="3" transform="rotate(-15,46,32)"/>
+    <rect class="pants" x="20" y="56" width="8" height="25" rx="3"/>
+    <rect class="pants" x="32" y="56" width="8" height="25" rx="3"/>
+    <rect fill="#1a3a3a" x="18" y="78" width="12" height="6" rx="2"/>
+    <rect fill="#1a3a3a" x="30" y="78" width="12" height="6" rx="2"/>
+  </g>
+</svg>

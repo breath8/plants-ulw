@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <!-- 毁灭菇 -->
+  <style>
+    @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+    .danger { animation: pulse 0.8s ease-in-out infinite; }
+  </style>
+  <g>
+    <!-- 危险光环 -->
+    <circle class="danger" fill="#FF2200" opacity="0.2" cx="40" cy="42" r="36"/>
+    <!-- 茎 -->
+    <rect fill="#3A2A1A" x="36" y="58" width="8" height="24" rx="3"/>
+    <!-- 菌帽 -->
+    <ellipse fill="#5A2A3A" cx="40" cy="38" rx="24" ry="20"/>
+    <!-- 菌帽纹理 -->
+    <ellipse fill="#7A3A4A" cx="36" cy="32" rx="16" ry="12"/>
+    <!-- 骷髅标记 -->
+    <ellipse fill="#1A0A0A" cx="32" cy="34" rx="4" ry="5"/>
+    <ellipse fill="#1A0A0A" cx="48" cy="34" rx="4" ry="5"/>
+    <!-- 骷髅鼻子 -->
+    <polygon fill="#1A0A0A" points="40,38 38,42 42,42"/>
+    <!-- 骷髅嘴 -->
+    <rect fill="#1A0A0A" x="32" y="44" width="16" height="3" rx="1"/>
+    <line stroke="#5A2A3A" stroke-width="1" x1="36" y1="44" x2="36" y2="47"/>
+    <line stroke="#5A2A3A" stroke-width="1" x1="40" y1="44" x2="40" y2="47"/>
+    <line stroke="#5A2A3A" stroke-width="1" x1="44" y1="44" x2="44" y2="47"/>
+    <!-- 危险标记 -->
+    <polygon fill="#FF4400" opacity="0.6" points="40,16 36,24 44,24"/>
+    <polygon fill="#FFFFFF" opacity="0.8" points="40,18 39,22 41,22"/>
+    <!-- 底部碎屑 -->
+    <ellipse fill="#4A1A2A" cx="40" cy="55" rx="18" ry="5"/>
+  </g>
+</svg>

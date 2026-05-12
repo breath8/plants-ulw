@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes worry { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-5deg)} }
+    .bulb { fill:#F5F5DC; }
+    .skin { fill:#E8E0C8; opacity:0.4; }
+    .groove { fill:none; stroke:#D4C99A; stroke-width:1; opacity:0.6; }
+    .stem { fill:#8BC34A; }
+    .leaf { fill:#689F38; }
+    .eye { fill:#fff; }
+    .pupil { fill:#000; }
+    .mouth { fill:none; stroke:#795548; stroke-width:1.5; }
+    .sweat { fill:#ADD8E6; opacity:0.6; }
+    .worry { animation: worry 2s ease-in-out infinite; transform-origin: 30px 35px; }
+  </style>
+  <g class="worry">
+    <ellipse class="bulb" cx="30" cy="32" rx="16" ry="18"/>
+    <ellipse class="skin" cx="27" cy="30" rx="12" ry="14"/>
+    <line class="groove" x1="30" y1="16" x2="30" y2="46"/>
+    <line class="groove" x1="24" y1="18" x2="26" y2="48"/>
+    <line class="groove" x1="36" y1="18" x2="34" y2="48"/>
+    <rect class="stem" x="28" y="12" width="4" height="8" rx="1"/>
+    <ellipse class="leaf" cx="24" cy="14" rx="5" ry="2" transform="rotate(-30,24,14)"/>
+    <ellipse class="leaf" cx="36" cy="12" rx="5" ry="2" transform="rotate(30,36,12)"/>
+    <circle class="eye" cx="25" cy="30" r="4"/>
+    <circle class="eye" cx="35" cy="30" r="4"/>
+    <circle class="pupil" cx="24" cy="31" r="2"/>
+    <circle class="pupil" cx="34" cy="31" r="2"/>
+    <circle class="sweat" cx="42" cy="28" r="2.5"/>
+    <path class="mouth" d="M26,38 Q30,42 34,38"/>
+  </g>
+</svg>

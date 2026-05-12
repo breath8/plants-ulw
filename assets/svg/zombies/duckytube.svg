@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+  <style>
+    @keyframes walk { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#8B6914; }
+    .pants { fill:#4a4a2a; }
+    .tube { fill:#FF4444; }
+    .tube-stripe { fill:#fff; opacity:0.5; }
+    .duck { fill:#FFCC00; }
+    .duck-beak { fill:#FF8800; }
+    .walk { animation: walk 0.6s ease-in-out infinite; transform-origin: 30px 40px; }
+  </style>
+  <g class="walk">
+    <circle class="skin" cx="30" cy="18" r="12"/>
+    <circle cx="25" cy="16" r="3" fill="#fff"/>
+    <circle cx="35" cy="16" r="3" fill="#fff"/>
+    <circle cx="26" cy="16" r="1.5" fill="#c00"/>
+    <circle cx="36" cy="16" r="1.5" fill="#c00"/>
+    <ellipse cx="30" cy="24" rx="5" ry="3" fill="#4a3a2a"/>
+    <rect class="shirt" x="18" y="28" width="24" height="22" rx="3"/>
+    <polygon fill="#6a4a0a" points="30,28 27,40 30,38 33,40"/>
+    <rect class="skin" x="10" y="30" width="8" height="20" rx="3"/>
+    <rect class="skin" x="42" y="30" width="8" height="20" rx="3"/>
+    <rect class="pants" x="20" y="48" width="8" height="20" rx="3"/>
+    <rect class="pants" x="32" y="48" width="8" height="20" rx="3"/>
+    <rect fill="#3a3a1a" x="18" y="66" width="12" height="5" rx="2"/>
+    <rect fill="#3a3a1a" x="30" y="66" width="12" height="5" rx="2"/>
+    <!-- 救生圈 -->
+    <ellipse class="tube" cx="30" cy="40" rx="18" ry="7"/>
+    <rect class="tube-stripe" x="16" y="36" width="4" height="10" rx="1"/>
+    <rect class="tube-stripe" x="40" y="36" width="4" height="10" rx="1"/>
+    <!-- 鸭子头 -->
+    <ellipse class="duck" cx="46" cy="35" rx="6" ry="5"/>
+    <ellipse class="duck-beak" cx="52" cy="37" rx="4" ry="2"/>
+    <circle cx="48" cy="34" r="1" fill="#000"/>
+  </g>
+</svg>

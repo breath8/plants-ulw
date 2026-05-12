@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+    .bean { fill:#5D4037; }
+    .highlight { fill:#795548; opacity:0.6; }
+    .groove { fill:none; stroke:#3E2723; stroke-width:1.5; }
+    .eye { fill:#fff; }
+    .pupil { fill:#000; }
+    .smile { fill:none; stroke:#3E2723; stroke-width:1.2; }
+    .steam { fill:none; stroke:#8D6E63; opacity:0.4; stroke-width:0.8; }
+    .bob { animation: bob 1s ease-in-out infinite; }
+  </style>
+  <g class="bob">
+    <ellipse class="bean" cx="30" cy="32" rx="14" ry="11"/>
+    <ellipse class="highlight" cx="27" cy="30" rx="8" ry="5"/>
+    <line class="groove" x1="30" y1="22" x2="30" y2="42"/>
+    <circle class="eye" cx="26" cy="30" r="3"/>
+    <circle class="eye" cx="34" cy="30" r="3"/>
+    <circle class="pupil" cx="26" cy="30" r="1.5"/>
+    <circle class="pupil" cx="34" cy="30" r="1.5"/>
+    <path class="smile" d="M26,35 Q30,39 34,35"/>
+    <path class="steam" d="M24,20 Q22,14 26,12"/>
+    <path class="steam" d="M34,18 Q36,12 32,10"/>
+  </g>
+</svg>

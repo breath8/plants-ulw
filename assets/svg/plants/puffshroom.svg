@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <!-- 小喷菇 -->
+  <style>
+    @keyframes sway { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+    .sway { animation: sway 2s ease-in-out infinite; transform-origin: 40px 80px; }
+  </style>
+  <g class="sway">
+    <!-- 茎 -->
+    <rect fill="#8B6AAF" x="36" y="58" width="8" height="24" rx="3"/>
+    <!-- 菌帽 -->
+    <ellipse fill="#9B59B6" cx="40" cy="38" rx="24" ry="20"/>
+    <!-- 菌帽高光 -->
+    <ellipse fill="#B07CC6" cx="36" cy="32" rx="16" ry="12"/>
+    <!-- 白色斑点 -->
+    <circle fill="#FFFFFF" cx="30" cy="30" r="3"/>
+    <circle fill="#FFFFFF" cx="46" cy="26" r="2.5"/>
+    <circle fill="#FFFFFF" cx="38" cy="22" r="2"/>
+    <circle fill="#FFFFFF" cx="52" cy="34" r="2"/>
+    <!-- 菌帽底部阴影 -->
+    <ellipse fill="#7B49A6" cx="40" cy="52" rx="20" ry="6"/>
+    <!-- 叶子 -->
+    <ellipse fill="#6B4A8A" cx="26" cy="68" rx="10" ry="4" transform="rotate(-20,26,68)"/>
+    <ellipse fill="#6B4A8A" cx="54" cy="70" rx="10" ry="4" transform="rotate(20,54,70)"/>
+  </g>
+</svg>

@@ -44,8 +44,8 @@ class MenuScene extends Phaser.Scene {
             shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 5, fill: true }
         }).setOrigin(0.5, 0.5);
 
-        const subtitle = this.add.text(width / 2, 150, '复刻版 - 前10关', {
-            font: 'bold 24px Arial',
+        const subtitle = this.add.text(width / 2, 150, '复刻版 - 冒险模式 + 额外模式', {
+            font: 'bold 20px Arial',
             fill: '#FFFFFF',
             stroke: '#000000',
             strokeThickness: 3
@@ -111,7 +111,77 @@ class MenuScene extends Phaser.Scene {
         });
 
         btnZone.on('pointerdown', () => {
-            this.scene.start('LevelSelectScene');
+            this.scene.start('WorldSelectScene');
+        });
+
+        // === 额外模式按钮 ===
+        const extraBtnX = width / 2;
+        const extraBtnY = 370;
+        const extraBtnBg = this.add.graphics();
+        extraBtnBg.fillStyle(0xE91E63);
+        extraBtnBg.fillRoundedRect(extraBtnX - 100, extraBtnY - 25, 200, 50, 10);
+        extraBtnBg.fillStyle(0xF06292);
+        extraBtnBg.fillRoundedRect(extraBtnX - 95, extraBtnY - 20, 190, 22, 8);
+
+        const extraBtnText = this.add.text(extraBtnX, extraBtnY, '额外模式', {
+            font: 'bold 24px Arial',
+            fill: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5, 0.5);
+
+        const extraBtnZone = this.add.zone(extraBtnX, extraBtnY, 200, 50).setInteractive({ useHandCursor: true });
+        extraBtnZone.on('pointerover', () => {
+            extraBtnBg.clear();
+            extraBtnBg.fillStyle(0xF06292);
+            extraBtnBg.fillRoundedRect(extraBtnX - 100, extraBtnY - 25, 200, 50, 10);
+            extraBtnBg.fillStyle(0xF48FB1);
+            extraBtnBg.fillRoundedRect(extraBtnX - 95, extraBtnY - 20, 190, 22, 8);
+        });
+        extraBtnZone.on('pointerout', () => {
+            extraBtnBg.clear();
+            extraBtnBg.fillStyle(0xE91E63);
+            extraBtnBg.fillRoundedRect(extraBtnX - 100, extraBtnY - 25, 200, 50, 10);
+            extraBtnBg.fillStyle(0xF06292);
+            extraBtnBg.fillRoundedRect(extraBtnX - 95, extraBtnY - 20, 190, 22, 8);
+        });
+        extraBtnZone.on('pointerdown', () => {
+            this.scene.start('ExtraModeSelectScene');
+        });
+
+        // === 设置按钮 ===
+        const setBtnX = width / 2;
+        const setBtnY = 430;
+        const setBtnBg = this.add.graphics();
+        setBtnBg.fillStyle(0x2196F3);
+        setBtnBg.fillRoundedRect(setBtnX - 100, setBtnY - 25, 200, 50, 10);
+        setBtnBg.fillStyle(0x42A5F5);
+        setBtnBg.fillRoundedRect(setBtnX - 95, setBtnY - 20, 190, 22, 8);
+
+        const setBtnText = this.add.text(setBtnX, setBtnY, '游戏设置', {
+            font: 'bold 24px Arial',
+            fill: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5, 0.5);
+
+        const setBtnZone = this.add.zone(setBtnX, setBtnY, 200, 50).setInteractive({ useHandCursor: true });
+        setBtnZone.on('pointerover', () => {
+            setBtnBg.clear();
+            setBtnBg.fillStyle(0x42A5F5);
+            setBtnBg.fillRoundedRect(setBtnX - 100, setBtnY - 25, 200, 50, 10);
+            setBtnBg.fillStyle(0x64B5F6);
+            setBtnBg.fillRoundedRect(setBtnX - 95, setBtnY - 20, 190, 22, 8);
+        });
+        setBtnZone.on('pointerout', () => {
+            setBtnBg.clear();
+            setBtnBg.fillStyle(0x2196F3);
+            setBtnBg.fillRoundedRect(setBtnX - 100, setBtnY - 25, 200, 50, 10);
+            setBtnBg.fillStyle(0x42A5F5);
+            setBtnBg.fillRoundedRect(setBtnX - 95, setBtnY - 20, 190, 22, 8);
+        });
+        setBtnZone.on('pointerdown', () => {
+            this.scene.start('SettingsScene');
         });
 
         // 版本信息
@@ -125,6 +195,10 @@ class MenuScene extends Phaser.Scene {
         subtitle.setAlpha(0);
         btnBg.setAlpha(0);
         btnText.setAlpha(0);
+        extraBtnBg.setAlpha(0);
+        extraBtnText.setAlpha(0);
+        setBtnBg.setAlpha(0);
+        setBtnText.setAlpha(0);
 
         this.tweens.add({
             targets: title,
@@ -140,6 +214,12 @@ class MenuScene extends Phaser.Scene {
 
         this.time.delayedCall(500, () => {
             this.tweens.add({ targets: [btnBg, btnText, btnZone], alpha: 1, duration: 300 });
+        });
+        this.time.delayedCall(650, () => {
+            this.tweens.add({ targets: [extraBtnBg, extraBtnText, extraBtnZone], alpha: 1, duration: 300 });
+        });
+        this.time.delayedCall(800, () => {
+            this.tweens.add({ targets: [setBtnBg, setBtnText, setBtnZone], alpha: 1, duration: 300 });
         });
     }
 }

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+  <style>
+    @keyframes roll { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+    .vehicle { fill:#5D4037; }
+    .vehicle2 { fill:#4E342E; }
+    .wheel { fill:#333; }
+    .hub { fill:#888; }
+    .arm { fill:#6D4C41; }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#8B6914; }
+    .helmet { fill:#8B0000; }
+    .eye { fill:#fff; }
+    .pupil { fill:#c00; }
+    .roll { animation: roll 0.8s ease-in-out infinite; transform-origin: 30px 70px; }
+  </style>
+  <g class="roll">
+    <rect class="vehicle" x="10" y="50" width="40" height="20" rx="4"/>
+    <rect class="vehicle2" x="8" y="46" width="44" height="8" rx="2"/>
+    <circle class="wheel" cx="16" cy="72" r="7"/>
+    <circle class="wheel" cx="44" cy="72" r="7"/>
+    <circle class="hub" cx="16" cy="72" r="3"/>
+    <circle class="hub" cx="44" cy="72" r="3"/>
+    <rect class="arm" x="27" y="18" width="6" height="30" rx="2"/>
+    <ellipse cx="32" cy="16" rx="8" ry="5" fill="#5D4037"/>
+    <circle class="skin" cx="30" cy="24" r="10"/>
+    <circle class="eye" cx="26" cy="22" r="3"/>
+    <circle class="eye" cx="34" cy="22" r="3"/>
+    <circle class="pupil" cx="27" cy="23" r="1.5"/>
+    <circle class="pupil" cx="35" cy="23" r="1.5"/>
+    <rect class="helmet" x="20" y="14" width="20" height="7" rx="3"/>
+    <rect class="shirt" x="22" y="32" width="16" height="12" rx="2"/>
+    <rect class="skin" x="16" y="34" width="6" height="10" rx="2"/>
+    <rect class="skin" x="38" y="34" width="6" height="10" rx="2"/>
+  </g>
+</svg>

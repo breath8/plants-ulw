@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes pulse { 0%,100%{opacity:0.15} 50%{opacity:0.3} }
+    .canopy { fill:#4CAF50; }
+    .canopy2 { fill:#388E3C; opacity:0.4; }
+    .shine { fill:#66BB6A; opacity:0.3; }
+    .rib { fill:none; stroke:#2E7D32; stroke-width:0.8; opacity:0.5; }
+    .pole { fill:#5D4037; }
+    .base { fill:#795548; }
+    .tip { fill:#8BC34A; }
+    .eye { fill:#fff; }
+    .pupil { fill:#1B5E20; }
+    .shield { fill:none; stroke:#81C784; stroke-width:1; opacity:0.2; }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+  </style>
+  <g>
+    <circle class="shield pulse" cx="30" cy="30" r="28"/>
+    <rect class="pole" x="28" y="24" width="4" height="22" rx="1"/>
+    <ellipse class="base" cx="30" cy="46" rx="8" ry="3"/>
+    <ellipse class="canopy" cx="30" cy="20" rx="26" ry="10"/>
+    <ellipse class="canopy2" cx="22" cy="20" rx="12" ry="9"/>
+    <ellipse class="shine" cx="26" cy="16" rx="10" ry="5"/>
+    <path class="rib" d="M6,20 L30,14 L54,20"/>
+    <path class="rib" d="M10,14 L30,10 L50,14"/>
+    <path class="rib" d="M14,22 L30,18 L46,22"/>
+    <circle class="tip" cx="30" cy="12" r="2"/>
+    <circle class="eye" cx="25" cy="22" r="2.5"/>
+    <circle class="eye" cx="35" cy="22" r="2.5"/>
+    <circle class="pupil" cx="25" cy="22" r="1.2"/>
+    <circle class="pupil" cx="35" cy="22" r="1.2"/>
+  </g>
+</svg>

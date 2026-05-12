@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+  <style>
+    @keyframes run { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+    .skin { fill:#6B8B5F; }
+    .shirt { fill:#8B0000; }
+    .pants { fill:#4A4A2A; }
+    .shoe { fill:#3A3A1A; }
+    .eye { fill:#fff; }
+    .pupil { fill:#c00; }
+    .tooth { fill:#fff; }
+    .mouth { fill:#2A1A0A; }
+    .run { animation: run 0.3s ease-in-out infinite; transform-origin: 30px 40px; }
+  </style>
+  <g class="run">
+    <circle class="skin" cx="30" cy="26" r="11"/>
+    <circle class="eye" cx="26" cy="24" r="4"/>
+    <circle class="eye" cx="34" cy="24" r="4"/>
+    <circle class="pupil" cx="27" cy="24" r="2"/>
+    <circle class="pupil" cx="35" cy="24" r="2"/>
+    <ellipse class="mouth" cx="30" cy="31" rx="4" ry="2"/>
+    <polygon class="tooth" points="28,31 29,28 30,31"/>
+    <polygon class="tooth" points="31,31 32,28 33,31"/>
+    <rect class="shirt" x="22" y="36" width="16" height="14" rx="2"/>
+    <rect class="skin" x="18" y="38" width="5" height="10" rx="2"/>
+    <rect class="skin" x="37" y="38" width="5" height="10" rx="2"/>
+    <rect class="pants" x="24" y="48" width="5" height="14" rx="2"/>
+    <rect class="pants" x="31" y="48" width="5" height="14" rx="2"/>
+    <rect class="shoe" x="22" y="60" width="8" height="4" rx="1"/>
+    <rect class="shoe" x="30" y="60" width="8" height="4" rx="1"/>
+  </g>
+</svg>

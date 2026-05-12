@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+  <style>
+    @keyframes swim { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(2deg)} }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#8B6914; }
+    .pants { fill:#4a4a2a; }
+    .snorkel { fill:#333; }
+    .goggle { fill:#222; }
+    .goggle-lens { fill:#88CCFF; opacity:0.6; }
+    .swim { animation: swim 0.8s ease-in-out infinite; transform-origin: 30px 40px; }
+  </style>
+  <g class="swim">
+    <circle class="skin" cx="30" cy="22" r="12"/>
+    <!-- 护目镜 -->
+    <rect class="goggle" x="18" y="17" width="24" height="9" rx="3"/>
+    <ellipse class="goggle-lens" cx="24" cy="21" rx="4" ry="3"/>
+    <ellipse class="goggle-lens" cx="36" cy="21" rx="4" ry="3"/>
+    <ellipse cx="30" cy="28" rx="4" ry="2.5" fill="#4a3a2a"/>
+    <rect class="shirt" x="18" y="32" width="24" height="22" rx="3"/>
+    <polygon fill="#6a4a0a" points="30,32 27,42 30,40 33,42"/>
+    <rect class="skin" x="10" y="34" width="8" height="18" rx="3"/>
+    <rect class="skin" x="42" y="34" width="8" height="18" rx="3"/>
+    <rect class="pants" x="20" y="52" width="8" height="18" rx="3"/>
+    <rect class="pants" x="32" y="52" width="8" height="18" rx="3"/>
+    <rect fill="#3a3a1a" x="18" y="68" width="12" height="5" rx="2"/>
+    <rect fill="#3a3a1a" x="30" y="68" width="12" height="5" rx="2"/>
+    <!-- 呼吸管 -->
+    <rect class="snorkel" x="42" y="6" width="3" height="28"/>
+    <rect class="snorkel" x="40" y="4" width="7" height="4" rx="1"/>
+    <circle cx="44" cy="3" r="2.5" fill="#555"/>
+  </g>
+</svg>

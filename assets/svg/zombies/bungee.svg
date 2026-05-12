@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+  <style>
+    @keyframes descend { 0%{transform:translateY(-20px)} 50%{transform:translateY(0)} 100%{transform:translateY(-20px)} }
+    .cord { fill:none; stroke:#8B4513; stroke-width:2; }
+    .skin { fill:#7B8B6F; }
+    .shirt { fill:#8B0000; }
+    .eye { fill:#fff; }
+    .pupil { fill:#c00; }
+    .claw { fill:#6B7B5F; }
+    .mask { fill:#1A1A1A; opacity:0.3; }
+    .descend { animation: descend 3s ease-in-out infinite; }
+  </style>
+  <g class="descend">
+    <line class="cord" x1="30" y1="0" x2="30" y2="20"/>
+    <line x1="29" y1="2" x2="29" y2="18" stroke="#A0522D" stroke-width="1.5"/>
+    <circle class="skin" cx="30" cy="30" r="12"/>
+    <circle class="eye" cx="25" cy="28" r="3.5"/>
+    <circle class="eye" cx="35" cy="28" r="3.5"/>
+    <circle class="pupil" cx="26" cy="29" r="1.8"/>
+    <circle class="pupil" cx="36" cy="29" r="1.8"/>
+    <ellipse cx="30" cy="36" rx="5" ry="2.5" fill="#4A3A2A"/>
+    <rect class="shirt" x="20" y="40" width="20" height="16" rx="3"/>
+    <rect class="skin" x="12" y="42" width="8" height="14" rx="3"/>
+    <rect class="skin" x="40" y="42" width="8" height="14" rx="3"/>
+    <polygon class="claw" points="12,56 16,56 14,60"/>
+    <polygon class="claw" points="40,56 44,56 42,60"/>
+    <rect class="mask" x="20" y="22" width="20" height="5" rx="2"/>
+  </g>
+</svg>

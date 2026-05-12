@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <!-- 胆小菇 -->
+  <style>
+    @keyframes shake { 0%,100%{transform:rotate(-1deg)} 50%{transform:rotate(1deg)} }
+    .shake { animation: shake 0.3s ease-in-out infinite; transform-origin: 40px 80px; }
+  </style>
+  <g class="shake">
+    <!-- 茎 -->
+    <rect fill="#5A8AAA" x="36" y="58" width="8" height="24" rx="3"/>
+    <!-- 菌帽 -->
+    <ellipse fill="#6A9ABA" cx="40" cy="38" rx="22" ry="18"/>
+    <!-- 菌帽高光 -->
+    <ellipse fill="#8ABACA" cx="36" cy="32" rx="14" ry="10"/>
+    <!-- 害怕的眼睛 -->
+    <ellipse fill="#FFFFFF" cx="32" cy="36" rx="5" ry="6"/>
+    <ellipse fill="#FFFFFF" cx="48" cy="36" rx="5" ry="6"/>
+    <circle fill="#000000" cx="32" cy="37" r="2.5"/>
+    <circle fill="#000000" cx="48" cy="37" r="2.5"/>
+    <!-- 害怕的嘴 -->
+    <ellipse fill="#3A6A8A" cx="40" cy="46" rx="4" ry="3"/>
+    <!-- 汗珠 -->
+    <ellipse fill="#AAE0FF" cx="56" cy="28" rx="2" ry="3"/>
+    <!-- 叶子 -->
+    <ellipse fill="#4A7A9A" cx="26" cy="68" rx="10" ry="4" transform="rotate(-20,26,68)"/>
+    <ellipse fill="#4A7A9A" cx="54" cy="70" rx="10" ry="4" transform="rotate(20,54,70)"/>
+  </g>
+</svg>

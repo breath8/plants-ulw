@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- 磁力菇 -->
+  <g>
+    <!-- 茎 -->
+    <rect fill="#6A4A8A" x="26" y="40" width="8" height="12" rx="3"/>
+    <!-- 叶子 -->
+    <ellipse fill="#5A3A7A" cx="18" cy="48" rx="7" ry="3"/>
+    <ellipse fill="#5A3A7A" cx="42" cy="50" rx="7" ry="3"/>
+    <!-- 菌帽 -->
+    <ellipse fill="#888" cx="30" cy="26" rx="22" ry="16"/>
+    <!-- N极（红） -->
+    <rect fill="#CC2200" x="10" y="14" width="14" height="10" rx="3"/>
+    <text fill="#FFF" font-size="8" font-weight="bold" x="14" y="22">N</text>
+    <!-- S极（蓝） -->
+    <rect fill="#2244CC" x="36" y="14" width="14" height="10" rx="3"/>
+    <text fill="#FFF" font-size="8" font-weight="bold" x="39" y="22">S</text>
+    <!-- 磁力弧 -->
+    <path d="M12 12 Q30 4 48 12" fill="none" stroke="#AAA" stroke-width="1" opacity="0.4"/>
+    <!-- 底部 -->
+    <ellipse fill="#5A3A7A" cx="30" cy="40" rx="16" ry="4"/>
+    <!-- 眼睛 -->
+    <circle fill="#FFF" cx="24" cy="30" r="4"/>
+    <circle fill="#FFF" cx="36" cy="30" r="4"/>
+    <circle fill="#000" cx="25" cy="31" r="2"/>
+    <circle fill="#000" cx="37" cy="31" r="2"/>
+  </g>
+</svg>

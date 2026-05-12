@@ -16,9 +16,13 @@ class Sun extends Phaser.GameObjects.Container {
         // 创建阳光图形
         this.createVisual();
 
-        // 设置交互 - 使用hitArea
+        // 设置交互 - 使用矩形hitArea（Container+Circle在Phaser 3.80中有坐标转换问题）
         this.setSize(50, 50);
-        this.setInteractive(new Phaser.Geom.Circle(0, 0, 25), Phaser.Geom.Circle.Contains);
+        this.setInteractive({
+            hitArea: new Phaser.Geom.Rectangle(-25, -25, 50, 50),
+            hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+            useHandCursor: true
+        });
 
         // 点击收集
         this.on('pointerdown', (pointer, localX, localY, event) => {

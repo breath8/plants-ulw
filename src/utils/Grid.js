@@ -16,7 +16,7 @@ class GridManager {
     getCellFromPosition(x, y) {
         const col = Math.floor((x - GRID.startX) / GRID.cellWidth);
         const row = Math.floor((y - GRID.startY) / GRID.cellHeight);
-        if (row >= 0 && row < GRID.rows && col >= 0 && col < GRID.cols) {
+        if (row >= 0 && row < this.grid.length && col >= 0 && col < GRID.cols) {
             return { row, col };
         }
         return null;
@@ -24,11 +24,13 @@ class GridManager {
 
     // 检查格子是否被占用
     isOccupied(row, col) {
+        if (row < 0 || row >= this.grid.length || col < 0 || col >= GRID.cols) return true;
         return this.grid[row][col] !== null;
     }
 
     // 放置植物
     placePlant(row, col, plant) {
+        if (row < 0 || row >= this.grid.length || col < 0 || col >= GRID.cols) return false;
         if (!this.isOccupied(row, col)) {
             this.grid[row][col] = plant;
             return true;
@@ -38,6 +40,7 @@ class GridManager {
 
     // 移除植物
     removePlant(row, col) {
+        if (row < 0 || row >= this.grid.length || col < 0 || col >= GRID.cols) return null;
         const plant = this.grid[row][col];
         this.grid[row][col] = null;
         return plant;
@@ -45,17 +48,20 @@ class GridManager {
 
     // 获取植物
     getPlant(row, col) {
+        if (row < 0 || row >= this.grid.length || col < 0 || col >= GRID.cols) return null;
         return this.grid[row][col];
     }
 
     // 获取整行植物（用于僵尸检测）
     getPlantsInRow(row) {
+        if (row < 0 || row >= this.grid.length) return [];
         return this.grid[row].filter(plant => plant !== null);
     }
 
-    // 重置网格
-    reset() {
-        this.grid = Array.from({ length: GRID.rows }, () => Array(GRID.cols).fill(null));
+    // 重置网格（支持动态行数）
+    reset(rows) {
+        const numRows = rows || GRID.rows;
+        this.grid = Array.from({ length: numRows }, () => Array(GRID.cols).fill(null));
     }
 }
 

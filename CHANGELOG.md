@@ -4,6 +4,76 @@
 
 ---
 
+## [0.2.0] - 2026-05-12
+
+### 🎮 完整冒险模式 - 50 关 / 5 世界
+
+从 Day 单世界扩展到全部 5 大世界冒险模式，新增 32 种植物、16 种僵尸、8 个场景，以及世界特有机制（墓碑、水池、迷雾、屋顶斜坡）。
+
+### 新增
+
+#### 世界系统
+- **世界选择界面**: WorldSelectScene，5 世界卡片式布局，显示解锁进度
+- **WORLD_CONFIG 驱动**: 每关通过 `worldIndex` 关联世界配置，动态切换机制
+- **世界解锁规则**: 完成前一个世界全部 10 关后解锁下一个
+
+#### Night 世界 (2-1 ~ 2-10)
+- **墓碑机制**: 格子被墓碑阻塞，GraveBuster 可清除，最终波墓碑生成僵尸
+- **夜间蘑菇体系**: 8 种蘑菇植物，阳光获取依赖 Sunshroom（无天空掉落阳光）
+- **新增植物**: Puffshroom(0☀范围攻击)、Sunshroom(成长产阳光)、Fumeshroom(穿透毒雾)、GraveBuster(铲墓碑)、Hypnoshroom(魅惑)、Scaredyshroom(胆小缩回)、Iceshroom(全屏冻结)、Doomshroom(大范围毁灭)
+- **新增僵尸**: Newspaper(加速)、ScreenDoor(铁门护甲)、Football(高速高血量)、Dancing(召唤伴舞)、BackupDancer
+
+#### Pool 世界 (3-1 ~ 3-10)
+- **水池机制**: 6 车道，中间 2 道为水池，需 Lilypad 才能种植非水生植物
+- **新增植物**: Lilypad(水上平台)、Squash(压扁)、Threepeater(三发射手)、TangleKelp(拖下水)、Jalapeno(全行火球)、Spikeweed(地刺)、Torchwood(火把增伤)、Tallnut(8000HP高墙)
+- **新增僵尸**: DuckyTube(泳圈渡水)、Snorkel(潜水)、Zomboni(冰车碾植物)、DolphinRider(海豚跳越)
+
+#### Fog 世界 (4-1 ~ 4-10)
+- **迷雾机制**: 右半场迷雾覆盖，需 Plantern 照亮或 Blover 吹散
+- **新增植物**: Seashroom(免费水上蘑菇)、Plantern(照亮区域)、Cactus(对空)、Blover(吹散迷雾)、Splitpea(前后双射)、Starfruit(五星散射)、Pumpkin(4000HP保护罩)、Magnetshroom(吸铁)
+- **新增僵尸**: Jackbox(箱子伪装)、Balloon(飞行绕过防御)
+
+#### Roof 世界 (5-1 ~ 5-10)
+- **屋顶斜坡机制**: 5 车道斜坡地形，需 Flowerpot 才能种植
+- **抛物线弹道**: Cabbagepult/Kernelpult/Melonpult 使用抛物线投射
+- **新增植物**: Flowerpot(种植平台)、Cabbagepult(抛投卷心菜)、Kernelpult(抛投玉米+黄油定身)、CoffeeBean(唤醒白天睡觉的蘑菇)、Garlic(强制换行)、Umbrellaleaf(防投掷/蹦极)、Marigold(产银币)、Melonpult(抛投西瓜范围减速)
+- **新增僵尸**: Bungee(空降偷植物)、Ladder(架梯越过坚果)、Catapult(投掷攻击)、Gargantuar(巨型boss)、Imp(小僵尸被抛投)
+
+#### 额外模式框架
+- **ExtraModeSelectScene**: 小游戏/解谜/生存/禅境花园选择界面
+- **MiniGameSelectScene**: 小游戏关卡选择（僵尸保龄球、坚果保龄球等）
+- **PuzzleSelectScene**: 解谜模式选择（Vasebreaker + IZombie）
+- **VasebreakerScene**: 砸花瓶解谜模式框架
+- **IZombieScene**: 我是僵尸解谜模式框架
+- **ZenGardenScene**: 禅境花园框架（金币/植物收集）
+- **extraLevels.js**: 小游戏/生存模式关卡数据
+
+#### SVG 美术资源
+- **40+ 新 SVG**: 全部 32 种植物、16 种僵尸的 SVG 纹理
+- **资源目录**: `assets/svg/plants/`、`assets/svg/zombies/`、`assets/svg/projectiles/`、`assets/svg/ui/`
+- **BootScene 预加载**: 所有 SVG 在启动场景中注册为 Phaser 纹理
+
+### 变更
+
+#### 关卡系统
+- **levels.js 重构**: 从 10 关扩展到 50 关完整数据
+- **WorldSelect + LevelSelect**: 新增世界选择，关卡选择按世界分组 2×5 排列
+- **设置界面**: SettingsScene 新增，支持调节初始阳光、阳光掉落/向日葵间隔、冷却/花费倍率、自动收集阳光
+
+#### 游戏核心增强
+- **GridManager 动态行数**: 支持 5/6 行根据世界配置动态切换
+- **GameScene 多世界渲染**: 白天/夜间背景、水池网格、迷雾覆盖等差异化绘制
+- **植物图标多样性**: createPlantPreview() 中 30+ 种植物程序化图标
+
+### 技术细节
+- **引擎**: Phaser 3.80.1
+- **渲染**: Canvas 2D + 程序化 Graphics 绘制（主）+ SVG 纹理（Fallback）
+- **架构**: ES6 Class 继承体系（全局作用域）
+- **物理**: Phaser Arcade Physics
+- **网格**: 自定义 GridManager 支持动态 `reset(rows)`
+- **存档**: localStorage（`plants_ulw_save`），含 settings 系统
+- **脚本**: 50+ `<script>` 标签在 `index.html` 严格按依赖顺序加载
+
 ## [0.1.0] - 2026-05-11
 
 ### 🎮 首次发布 - 植物大战僵尸复刻版

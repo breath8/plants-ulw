@@ -285,6 +285,11 @@ class Zombie extends Phaser.GameObjects.Container {
         this.alive = false;
         this.body.setVelocityX(0);
 
+        // 通知场景僵尸被击杀
+        if (this.scene && this.scene.onZombieKilled) {
+            this.scene.onZombieKilled();
+        }
+
         if (this.walkTween) this.walkTween.stop();
         if (this.eatTween) this.eatTween.stop();
 

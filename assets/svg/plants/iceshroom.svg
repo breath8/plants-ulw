@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <!-- 冰冻菇 -->
+  <style>
+    @keyframes glow { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+    .glow { animation: glow 1.5s ease-in-out infinite; }
+  </style>
+  <g>
+    <!-- 冰霜光环 -->
+    <circle class="glow" fill="#AAE0FF" opacity="0.3" cx="40" cy="42" r="36"/>
+    <!-- 茎 -->
+    <rect fill="#4A8ABB" x="36" y="58" width="8" height="24" rx="3"/>
+    <!-- 菌帽 -->
+    <ellipse fill="#5AAADF" cx="40" cy="38" rx="24" ry="20"/>
+    <!-- 冰晶效果 -->
+    <ellipse fill="#8ACAFF" cx="36" cy="32" rx="16" ry="12"/>
+    <!-- 冰晶装饰 -->
+    <polygon fill="#FFFFFF" opacity="0.7" points="40,18 37,26 43,26"/>
+    <polygon fill="#FFFFFF" opacity="0.5" points="28,30 30,24 32,30"/>
+    <polygon fill="#FFFFFF" opacity="0.5" points="52,28 54,22 56,28"/>
+    <!-- 雪花图案 -->
+    <line stroke="#FFFFFF" stroke-width="1.5" opacity="0.6" x1="40" y1="26" x2="40" y2="34"/>
+    <line stroke="#FFFFFF" stroke-width="1.5" opacity="0.6" x1="36" y1="30" x2="44" y2="30"/>
+    <!-- 叶子 -->
+    <ellipse fill="#3A7AAA" cx="26" cy="68" rx="10" ry="4" transform="rotate(-20,26,68)"/>
+    <ellipse fill="#3A7AAA" cx="54" cy="70" rx="10" ry="4" transform="rotate(20,54,70)"/>
+  </g>
+</svg>

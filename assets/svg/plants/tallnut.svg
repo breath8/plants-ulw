@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes sway { 0%,100%{transform:rotate(-1deg)} 50%{transform:rotate(1deg)} }
+    .shell { fill:#8B6914; }
+    .shell-dark { fill:#6B4F10; }
+    .crack { stroke:#5A4510; stroke-width:1.5; fill:none; }
+    .eye { fill:#fff; }
+    .pupil { fill:#000; }
+    .mouth { stroke:#4A3510; stroke-width:1.5; fill:none; }
+    .sway { animation: sway 2s ease-in-out infinite; transform-origin: 30px 55px; }
+  </style>
+  <g class="sway">
+    <rect class="shell" x="14" y="10" width="32" height="44" rx="6"/>
+    <rect class="shell-dark" x="18" y="14" width="24" height="36" rx="4" opacity="0.3"/>
+    <line class="crack" x1="20" y1="24" x2="40" y2="24"/>
+    <line class="crack" x1="20" y1="34" x2="40" y2="34"/>
+    <line class="crack" x1="20" y1="42" x2="40" y2="42"/>
+    <ellipse cx="30" cy="10" rx="12" ry="4" fill="#7A5A10"/>
+    <ellipse class="eye" cx="24" cy="26" rx="5" ry="6"/>
+    <ellipse class="eye" cx="36" cy="26" rx="5" ry="6"/>
+    <circle class="pupil" cx="25" cy="27" r="2.5"/>
+    <circle class="pupil" cx="37" cy="27" r="2.5"/>
+    <line class="mouth" x1="26" y1="36" x2="34" y2="36"/>
+  </g>
+</svg>

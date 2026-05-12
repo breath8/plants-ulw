@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <style>
+    @keyframes load { 0%,100%{transform:rotate(0deg)} 50%{transform:rotate(-10deg)} }
+    .base { fill:#8B6914; }
+    .arm { fill:#7A5A10; }
+    .kernel { fill:#F4D03F; }
+    .butter { fill:#FFC107; }
+    .leaf { fill:#3D7A1F; }
+    .eye { fill:#fff; }
+    .pupil { fill:#000; }
+    .load { animation: load 2s ease-in-out infinite; transform-origin: 30px 40px; }
+  </style>
+  <g class="load">
+    <ellipse class="base" cx="30" cy="50" rx="20" ry="7"/>
+    <rect class="base" x="27" y="28" width="6" height="24" rx="2"/>
+    <rect class="arm" x="12" y="26" width="36" height="5" rx="2"/>
+    <ellipse class="arm" cx="44" cy="24" rx="8" ry="5"/>
+    <circle class="kernel" cx="44" cy="22" r="8"/>
+    <circle cx="42" cy="20" r="3" fill="#F9E154" opacity="0.6"/>
+    <rect class="butter" x="36" y="32" width="12" height="8" rx="2" opacity="0.8"/>
+    <ellipse class="leaf" cx="14" cy="38" rx="8" ry="3"/>
+    <ellipse class="leaf" cx="46" cy="42" rx="8" ry="3"/>
+    <circle class="eye" cx="26" cy="24" r="3"/>
+    <circle class="eye" cx="34" cy="24" r="3"/>
+    <circle class="pupil" cx="27" cy="24" r="1.5"/>
+    <circle class="pupil" cx="35" cy="24" r="1.5"/>
+  </g>
+</svg>

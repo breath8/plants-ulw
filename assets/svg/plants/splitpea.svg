@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- 双发射手 -->
+  <g>
+    <!-- 茎 -->
+    <rect fill="#4A8C2A" x="26" y="38" width="8" height="14" rx="3"/>
+    <!-- 叶子 -->
+    <ellipse fill="#3D7A1F" cx="18" cy="46" rx="8" ry="3"/>
+    <ellipse fill="#3D7A1F" cx="42" cy="48" rx="8" ry="3"/>
+    <!-- 前头（右） -->
+    <circle fill="#6ABF3A" cx="38" cy="26" r="13"/>
+    <ellipse fill="#3D7A1F" cx="48" cy="28" rx="6" ry="5" opacity="0.4"/>
+    <ellipse fill="#FFF" cx="34" cy="24" rx="5" ry="6"/>
+    <circle fill="#000" cx="35" cy="24" r="3"/>
+    <ellipse fill="#2D5A1B" cx="48" cy="28" rx="5" ry="2.5"/>
+    <!-- 后头（左） -->
+    <circle fill="#5AAF2A" cx="22" cy="26" r="11"/>
+    <ellipse fill="#3D7A1F" cx="14" cy="28" rx="5" ry="4" opacity="0.4"/>
+    <ellipse fill="#FFF" cx="18" cy="24" rx="4" ry="5"/>
+    <circle fill="#000" cx="19" cy="24" r="2.5"/>
+    <ellipse fill="#2D5A1B" cx="14" cy="28" rx="4" ry="2"/>
+  </g>
+</svg>

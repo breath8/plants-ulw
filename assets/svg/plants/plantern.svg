@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- 路灯花 -->
+  <style>
+    @keyframes glow { 0%,100%{opacity:0.3} 50%{opacity:0.6} }
+    .glow { animation: glow 2s ease-in-out infinite; }
+  </style>
+  <g>
+    <!-- 光照区域 -->
+    <circle class="glow" fill="#FFFF88" cx="30" cy="28" r="28" opacity="0.15"/>
+    <!-- 茎 -->
+    <rect fill="#6B8A4A" x="26" y="40" width="8" height="14" rx="3"/>
+    <!-- 叶子 -->
+    <ellipse fill="#5A7A3A" cx="18" cy="48" rx="7" ry="3"/>
+    <ellipse fill="#5A7A3A" cx="42" cy="50" rx="7" ry="3"/>
+    <!-- 灯罩 -->
+    <rect fill="#F5D83C" x="16" y="10" width="28" height="28" rx="8"/>
+    <!-- 灯罩高光 -->
+    <rect fill="#FFF8A0" x="19" y="13" width="12" ry="5" height="22" rx="5" opacity="0.6"/>
+    <!-- 灯罩横纹 -->
+    <line x1="19" y1="24" x2="41" y2="24" stroke="#D4B82A" stroke-width="1"/>
+    <line x1="19" y1="32" x2="41" y2="32" stroke="#D4B82A" stroke-width="1"/>
+    <!-- 灯芯 -->
+    <circle fill="#FF8C00" cx="30" cy="26" r="5"/>
+    <circle fill="#FFCC00" cx="30" cy="26" r="3" opacity="0.7"/>
+    <!-- 灯顶 -->
+    <rect fill="#8B6914" x="22" y="6" width="16" height="6" rx="3"/>
+    <!-- 灯底 -->
+    <rect fill="#8B6914" x="24" y="38" width="12" height="4" rx="2"/>
+    <!-- 眼睛 -->
+    <circle fill="#FFF" cx="26" cy="24" r="3"/>
+    <circle fill="#FFF" cx="34" cy="24" r="3"/>
+    <circle fill="#000" cx="27" cy="24" r="1.5"/>
+    <circle fill="#000" cx="35" cy="24" r="1.5"/>
+  </g>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100">
+  <!-- 催眠菇 -->
+  <style>
+    @keyframes hypnotize { 0%,100%{opacity:1} 50%{opacity:0.7} }
+    .pulse { animation: hypnotize 1.5s ease-in-out infinite; }
+  </style>
+  <g>
+    <!-- 茎 -->
+    <rect fill="#8A5AA0" x="36" y="58" width="8" height="24" rx="3"/>
+    <!-- 菌帽 -->
+    <ellipse fill="#B060D0" cx="40" cy="38" rx="24" ry="20"/>
+    <!-- 螺旋纹 -->
+    <path class="pulse" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.8"
+      d="M40,28 Q48,28 48,34 Q48,40 40,40 Q32,40 32,46 Q32,50 40,50"/>
+    <!-- 菌帽高光 -->
+    <ellipse fill="#C080E0" cx="36" cy="32" rx="16" ry="12" opacity="0.5"/>
+    <!-- 叶子 -->
+    <ellipse fill="#7A4A90" cx="26" cy="68" rx="10" ry="4" transform="rotate(-20,26,68)"/>
+    <ellipse fill="#7A4A90" cx="54" cy="70" rx="10" ry="4" transform="rotate(20,54,70)"/>
+  </g>
+</svg>

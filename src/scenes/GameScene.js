@@ -6,15 +6,53 @@ class GameScene extends Phaser.Scene {
 
     init(data) {
         this.levelIndex = data.level || 0;
-        this.levelData = LEVELS[this.levelIndex];
-        this.sunAmount = SUN.initialAmount;
+        this.gameMode = data.mode || 'adventure'; // 'adventure', 'mini', 'survival'
+
+        // 根据模式选择关卡数据源
+        if (this.gameMode === 'mini') {
+            this.levelData = MINI_GAMES[this.levelIndex];
+        } else if (this.gameMode === 'survival') {
+            this.levelData = { waves: [], plants: SURVIVAL_CONFIG.initialPlants };
+            this.survivalWaveNumber = 0;
+            this.isSurvivalMode = true;
+        } else {
+            this.levelData = LEVELS[this.levelIndex];
+        }
+
+        // 世界系统
+        this.worldIndex = this.levelData.world !== undefined ? this.levelData.world : 0;
+        this.worldConfig = WORLD_CONFIG[this.worldIndex] || WORLD_CONFIG[0];
+        this.isNight = this.worldConfig.isNight;
+        this.hasGraves = this.worldConfig.hasGraves;
+        this.hasPool = this.worldConfig.hasPool;
+        this.hasFog = this.worldConfig.hasFog;
+        this.hasSlope = this.worldConfig.hasSlope;
+        this.sunFalls = this.worldConfig.sunFalls;
+        this.gridRows = this.worldConfig.lanes;
+
+        // 应用设置（生存模式使用独立设置）
+        const settings = saveManager.getSettings();
+        if (this.isSurvivalMode) {
+            this.sunAmount = SURVIVAL_CONFIG.initialSun;
+            this.sunFallInterval = SURVIVAL_CONFIG.sunFallInterval;
+        } else {
+            this.sunAmount = settings.initialSun;
+            this.sunFallInterval = settings.sunFallInterval;
+        }
+        this.sunflowerInterval = settings.sunflowerInterval;
+        this.cooldownMultiplier = settings.cooldownMultiplier;
+        this.costMultiplier = settings.costMultiplier;
+        this.autoCollectSun = settings.autoCollectSun || false;
+
         this.isGameOver = false;
         this.isPaused = false;
+        this.pauseMenuContainer = null;
         this.selectedPlant = null;
         this.shovelActive = false;
         this.waveIndex = 0;
         this.zombieSpawnTimer = 0;
         this.sunFallTimer = 0;
+        this.graves = [];
         this.lawnmowers = [];
         this.plants = [];
         this.zombies = [];
@@ -24,6 +62,11 @@ class GameScene extends Phaser.Scene {
         this.waveZombies = [];
         this.allWavesSpawned = false;
         this.zombiesRemaining = 0;
+        this.killedZombies = 0;
+        this.totalZombies = this.isSurvivalMode ? 9999 : this.levelData.waves.reduce((sum, wave) => sum + wave.zombies.length, 0);
+        this.waveEndTimer = 0;              // 波次结束后等待计时器
+        this.minWaveGap = 5000;             // 波次最小间隔时间(ms)
+        this.waveEndWaiting = false;        // 是否在等待波次间隔
     }
 
     create() {
@@ -31,10 +74,11 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.resetFX();
         this.cameras.main.setAlpha(1);
 
-        // 重置网格
-        gridManager.reset();
+        // 重置网格（支持动态行数）
+        gridManager.reset(this.gridRows);
 
         this.createBackground();
+        this.createGraves();
         this.createUI();
         this.createLawnmowers();
         this.setupInput();
@@ -46,66 +90,231 @@ class GameScene extends Phaser.Scene {
 
     createBackground() {
         const g = this.add.graphics();
+        const rows = this.gridRows || GRID.rows;
+        const gridHeight = rows * GRID.cellHeight;
+        const gridEndY = GRID.startY + gridHeight;
+        const lawnEndX = GRID.startX + GRID.cols * GRID.cellWidth;
 
-        // 院子背景
-        g.fillStyle(0x8B7355);
-        g.fillRect(0, 0, GAME_WIDTH, GRID.startY);
+        // 夜间/白天顶部颜色
+        if (this.isNight) {
+            g.fillStyle(0x0a0a2e);
+            g.fillRect(0, 0, GAME_WIDTH, GRID.startY);
+            g.fillStyle(0x1a1a3e, 0.5);
+            g.fillRect(0, 0, GAME_WIDTH, GRID.startY);
+            // 月亮
+            g.fillStyle(0xCCCCAA, 0.3);
+            g.fillCircle(850, 30, 20);
+            g.fillStyle(0xEEEDD0, 0.5);
+            g.fillCircle(850, 30, 15);
+        } else {
+            g.fillStyle(0x87CEEB);
+            g.fillRect(0, 0, GAME_WIDTH, GRID.startY);
+            g.fillStyle(0x4A90D9, 0.3);
+            g.fillRect(0, 0, GAME_WIDTH, GRID.startY);
+        }
 
-        // 草坪
-        for (let row = 0; row < GRID.rows; row++) {
+        // 草坪网格
+        for (let row = 0; row < rows; row++) {
             for (let col = 0; col < GRID.cols; col++) {
                 const x = GRID.startX + col * GRID.cellWidth;
                 const y = GRID.startY + row * GRID.cellHeight;
-                const isDark = (row + col) % 2 === 0;
-                g.fillStyle(isDark ? 0x5AA035 : 0x4A8C2A);
-                g.fillRect(x, y, GRID.cellWidth, GRID.cellHeight);
+
+                // Pool世界的中间2行是水池
+                if (this.hasPool && row >= 2 && row <= 3) {
+                    g.fillStyle(0x1a5276);
+                    g.fillRect(x, y, GRID.cellWidth, GRID.cellHeight);
+                    g.fillStyle(0x2471A3, 0.3);
+                    g.fillRect(x + 2, y + 2, GRID.cellWidth - 4, GRID.cellHeight - 4);
+                } else {
+                    const isDark = (row + col) % 2 === 0;
+                    if (this.isNight) {
+                        g.fillStyle(isDark ? 0x2d5a1b : 0x1e4d12);
+                    } else {
+                        g.fillStyle(isDark ? 0x5AA035 : 0x4A8C2A);
+                    }
+                    g.fillRect(x, y, GRID.cellWidth, GRID.cellHeight);
+                }
             }
         }
 
-        // 左侧房屋区域
-        g.fillStyle(0x8B7355);
-        g.fillRect(0, GRID.startY, GRID.startX, GRID.rows * GRID.cellHeight);
+        // 左侧房子区域
+        if (this.hasSlope) {
+            // 屋顶 - 没有房子
+            g.fillStyle(0x8B4513);
+            g.fillRect(0, GRID.startY, GRID.startX, gridHeight);
+        } else if (this.isNight) {
+            // 夜间房子 - 暗色
+            g.fillStyle(0x1a1a2e);
+            g.fillRect(0, GRID.startY, GRID.startX, gridHeight);
+            g.fillStyle(0x2a1a0e);
+            g.fillRect(10, 90, 170, 180);
+            // 门
+            g.fillStyle(0x0a0a0a);
+            g.fillRect(70, 180, 40, 90);
+            // 窗户（亮灯）
+            g.fillStyle(0x4a4a1a);
+            g.fillRect(25, 115, 25, 25);
+            g.fillRect(135, 115, 25, 25);
+        } else {
+            // 白天房子
+            g.fillStyle(0x8B7355);
+            g.fillRect(0, GRID.startY, GRID.startX, gridHeight);
+            g.fillStyle(0xA0522D);
+            g.fillRect(0, 80, 180, 200);
+            g.fillStyle(0x8B4513);
+            g.fillRect(0, 60, 200, 30);
+            g.fillStyle(0x654321);
+            g.fillRect(70, 180, 40, 100);
+            g.fillStyle(0xADD8E6);
+            g.fillRect(20, 120, 30, 30);
+            g.fillRect(130, 120, 30, 30);
+            g.lineStyle(2, 0x654321);
+            g.strokeRect(20, 120, 30, 30);
+            g.strokeRect(130, 120, 30, 30);
+            g.beginPath();
+            g.moveTo(35, 120);
+            g.lineTo(35, 150);
+            g.strokePath();
+            g.beginPath();
+            g.moveTo(20, 135);
+            g.lineTo(50, 135);
+            g.strokePath();
+            g.beginPath();
+            g.moveTo(145, 120);
+            g.lineTo(145, 150);
+            g.strokePath();
+            g.beginPath();
+            g.moveTo(130, 135);
+            g.lineTo(160, 135);
+            g.strokePath();
+        }
 
-        // 房屋
-        g.fillStyle(0xA0522D);
-        g.fillRect(0, 80, 180, 200);
-        g.fillStyle(0x8B4513);
-        g.fillRect(0, 60, 200, 30);
-        // 门
-        g.fillStyle(0x654321);
-        g.fillRect(70, 180, 40, 100);
-        // 窗户
-        g.fillStyle(0xADD8E6);
-        g.fillRect(20, 120, 30, 30);
-        g.fillRect(130, 120, 30, 30);
-        g.lineStyle(2, 0x654321);
-        g.strokeRect(20, 120, 30, 30);
-        g.strokeRect(130, 120, 30, 30);
-        g.beginPath();
-        g.moveTo(35, 120);
-        g.lineTo(35, 150);
-        g.strokePath();
-        g.beginPath();
-        g.moveTo(20, 135);
-        g.lineTo(50, 135);
-        g.strokePath();
-        g.beginPath();
-        g.moveTo(145, 120);
-        g.lineTo(145, 150);
-        g.strokePath();
-        g.beginPath();
-        g.moveTo(130, 135);
-        g.lineTo(160, 135);
-        g.strokePath();
-
-        // 右侧道路
-        g.fillStyle(0x7B7B7B);
-        g.fillRect(GRID.startX + GRID.cols * GRID.cellWidth, GRID.startY,
-            GAME_WIDTH - GRID.startX - GRID.cols * GRID.cellWidth, GRID.rows * GRID.cellHeight);
+        // 右侧道路/区域
+        if (this.hasPool) {
+            g.fillStyle(0x1a3a5a);
+        } else if (this.hasSlope) {
+            g.fillStyle(0x6B3410);
+        } else if (this.isNight) {
+            g.fillStyle(0x1a1a2e);
+        } else {
+            g.fillStyle(0x7B7B7B);
+        }
+        g.fillRect(lawnEndX, GRID.startY, GAME_WIDTH - lawnEndX, gridHeight);
 
         // 底部
-        g.fillStyle(0x8B7355);
-        g.fillRect(0, GRID.startY + GRID.rows * GRID.cellHeight, GAME_WIDTH, 100);
+        if (this.hasSlope) {
+            g.fillStyle(0x5B2A0E);
+        } else if (this.isNight) {
+            g.fillStyle(0x0a0a1e);
+        } else {
+            g.fillStyle(0x8B7355);
+        }
+        g.fillRect(0, gridEndY, GAME_WIDTH, 100);
+
+        // 夜间的星星
+        if (this.isNight) {
+            for (let i = 0; i < 30; i++) {
+                const sx = Math.random() * GAME_WIDTH;
+                const sy = Math.random() * GRID.startY;
+                g.fillStyle(0xFFFFFF, Math.random() * 0.5 + 0.2);
+                g.fillCircle(sx, sy, Math.random() * 1.5 + 0.5);
+            }
+        }
+
+        // 迷雾覆盖（Fog世界）
+        if (this.hasFog) {
+            this.fogOverlay = this.add.graphics();
+            this.fogOverlay.setDepth(5);
+            this.updateFogOverlay();
+        }
+
+        // 屋顶斜坡：左侧房子区域风格
+        if (this.hasSlope) {
+            // 屋顶边缘装饰线
+            g.lineStyle(2, 0x6B3410);
+            g.beginPath();
+            g.moveTo(0, GRID.startY);
+            g.lineTo(GRID.startX, GRID.startY);
+            g.strokePath();
+            // 屋顶砖纹
+            const slopeG = this.add.graphics();
+            slopeG.setDepth(0);
+            for (let row = 0; row < rows; row++) {
+                const yOffset = GRID.startY + row * GRID.cellHeight + GRID.cellHeight / 2;
+                for (let col = 0; col < GRID.cols; col++) {
+                    const x = GRID.startX + col * GRID.cellWidth + GRID.cellWidth / 2;
+                    slopeG.lineStyle(1, 0x5B2A0E, 0.2);
+                    slopeG.strokeRect(x - 38, yOffset - 46, 76, 92);
+                }
+            }
+        }
+    }
+
+    updateFogOverlay() {
+        if (!this.fogOverlay || !this.hasFog) return;
+
+        this.fogOverlay.clear();
+        const rows = this.gridRows || GRID.rows;
+        const cols = GRID.cols;
+
+        // 迷雾渐变 - 右侧更浓
+        for (let col = 0; col < cols; col++) {
+            const alpha = (col / cols) * 0.6; // 越靠右雾越浓
+            const x = GRID.startX + col * GRID.cellWidth;
+            for (let row = 0; row < rows; row++) {
+                const y = GRID.startY + row * GRID.cellHeight;
+
+                // 检查该格是否有Plantern驱散
+                let revealed = false;
+                if (this.plants) {
+                    for (const p of this.plants) {
+                        if (p && p.alive && p.type === 'plantern') {
+                            const dr = Math.abs(p.row - row);
+                            const dc = Math.abs(p.col - col);
+                            if (dr <= 2 && dc <= 2) {
+                                revealed = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!revealed && alpha > 0.05) {
+                    this.fogOverlay.fillStyle(0x1a1a2e, alpha);
+                    this.fogOverlay.fillRect(x, y, GRID.cellWidth, GRID.cellHeight);
+                }
+            }
+        }
+    }
+
+    createGraves() {
+        if (!this.hasGraves) return;
+
+        // 在草坪上随机放置墓碑
+        const graveCount = Phaser.Math.Between(3, 6);
+        const cols = GRID.cols;
+        const rows = this.gridRows || GRID.rows;
+
+        // 收集可用格子（排除第1列和第9列，以及已占用的格子）
+        const availableCells = [];
+        for (let r = 0; r < rows; r++) {
+            for (let c = 1; c < cols - 1; c++) {
+                if (!gridManager.isOccupied(r, c)) {
+                    availableCells.push({ row: r, col: c });
+                }
+            }
+        }
+
+        // 随机选择位置
+        Phaser.Utils.Array.Shuffle(availableCells);
+        for (let i = 0; i < Math.min(graveCount, availableCells.length); i++) {
+            const cell = availableCells[i];
+            const pos = gridManager.getCellPosition(cell.row, cell.col);
+            const grave = new Grave(this, pos.x, pos.y, cell.row, cell.col);
+            this.graves.push(grave);
+            // 标记格子被墓碑占用
+            gridManager.grid[cell.row][cell.col] = 'grave';
+        }
     }
 
     createUI() {
@@ -155,7 +364,8 @@ class GameScene extends Phaser.Scene {
         this.createShovelButton(shovelX, cardY, cardWidth, cardHeight);
 
         // === 波次信息 ===
-        this.waveText = this.add.text(GAME_WIDTH - 20, 25, `波次: 0/${this.levelData.waves.length}`, {
+        const totalWaves = this.isSurvivalMode ? '∞' : this.levelData.waves.length;
+        this.waveText = this.add.text(GAME_WIDTH - 20, 25, `波次: 0/${totalWaves}`, {
             font: 'bold 16px Arial',
             fill: '#FFFFFF',
             stroke: '#000000',
@@ -169,6 +379,9 @@ class GameScene extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 1
         }).setOrigin(1, 0.5);
+
+        // === 进度条 ===
+        this.createProgressBar();
 
         // === 暂停按钮 ===
         this.createPauseButton();
@@ -197,8 +410,9 @@ class GameScene extends Phaser.Scene {
         const preview = this.createPlantPreview(plantType, width / 2, 25);
         container.add(preview);
 
-        // 阳光消耗
-        const costText = this.add.text(width / 2, height - 15, String(cfg.cost), {
+        // 阳光消耗（考虑倍率）
+        const effectiveCost = Math.round(cfg.cost * this.costMultiplier);
+        const costText = this.add.text(width / 2, height - 15, String(effectiveCost), {
             font: 'bold 12px Arial',
             fill: '#FFD700'
         }).setOrigin(0.5, 0.5);
@@ -221,7 +435,8 @@ class GameScene extends Phaser.Scene {
         });
 
         zone.on('pointerover', () => {
-            if (!cooldownMask.visible && this.sunAmount >= cfg.cost) {
+            const effCost = Math.round(cfg.cost * this.costMultiplier);
+            if (!cooldownMask.visible && this.sunAmount >= effCost) {
                 container.setScale(1.05);
             }
         });
@@ -245,6 +460,12 @@ class GameScene extends Phaser.Scene {
     }
 
     createPlantPreview(type, cx, cy) {
+        // 优先使用SVG纹理
+        const textureKey = 'plant_' + type;
+        if (this.textures && this.textures.exists(textureKey)) {
+            return this.add.image(cx, cy, textureKey).setScale(0.35);
+        }
+
         const g = this.add.graphics();
         const scale = 0.5;
 
@@ -337,6 +558,88 @@ class GameScene extends Phaser.Scene {
                 g.fillCircle(cx - 3, cy - 2, 1);
                 g.fillCircle(cx + 3, cy - 2, 1);
                 break;
+            case 'puffshroom':
+                g.fillStyle(0x8B6AAF);
+                g.fillRect(cx - 2, cy + 5, 4, 8);
+                g.fillStyle(0x9B59B6);
+                g.fillEllipse(cx, cy, 20, 16);
+                g.fillStyle(0xFFFFFF);
+                g.fillCircle(cx - 4, cy - 3, 1.5);
+                g.fillCircle(cx + 3, cy - 5, 1.5);
+                break;
+            case 'sunshroom':
+                g.fillStyle(0xD4A847);
+                g.fillRect(cx - 2, cy + 5, 4, 8);
+                g.fillStyle(0xF5C842);
+                g.fillEllipse(cx, cy, 20, 16);
+                g.fillStyle(0xFFFFFF);
+                g.fillCircle(cx - 3, cy - 2, 2);
+                g.fillCircle(cx + 3, cy - 2, 2);
+                g.fillStyle(0x000000);
+                g.fillCircle(cx - 3, cy - 2, 1);
+                g.fillCircle(cx + 3, cy - 2, 1);
+                break;
+            case 'fumeshroom':
+                g.fillStyle(0x5A7A3A);
+                g.fillRect(cx - 2, cy + 5, 4, 8);
+                g.fillStyle(0x7B9B4A);
+                g.fillEllipse(cx, cy, 24, 18);
+                g.fillStyle(0x8BAB5A, 0.5);
+                g.fillCircle(cx + 10, cy - 2, 4);
+                break;
+            case 'gravebuster':
+                g.fillStyle(0xE8E8E8);
+                g.fillEllipse(cx, cy, 18, 20);
+                g.fillStyle(0x1A1A2E);
+                g.fillEllipse(cx - 3, cy - 3, 4, 5);
+                g.fillEllipse(cx + 3, cy - 3, 4, 5);
+                g.fillStyle(0xCC2222);
+                g.fillCircle(cx - 3, cy - 3, 1);
+                g.fillCircle(cx + 3, cy - 3, 1);
+                break;
+            case 'hypnoshroom':
+                g.fillStyle(0x8A5AA0);
+                g.fillRect(cx - 2, cy + 5, 4, 8);
+                g.fillStyle(0xB060D0);
+                g.fillEllipse(cx, cy, 22, 16);
+                g.lineStyle(1.5, 0xFFFFFF, 0.8);
+                g.beginPath();
+                g.arc(cx, cy, 4, 0, Math.PI * 1.5);
+                g.strokePath();
+                break;
+            case 'scaredyshroom':
+                g.fillStyle(0x5A8AAA);
+                g.fillRect(cx - 2, cy + 5, 4, 8);
+                g.fillStyle(0x6A9ABA);
+                g.fillEllipse(cx, cy, 20, 16);
+                g.fillStyle(0xFFFFFF);
+                g.fillEllipse(cx - 3, cy - 2, 4, 5);
+                g.fillEllipse(cx + 3, cy - 2, 4, 5);
+                g.fillStyle(0x000000);
+                g.fillCircle(cx - 3, cy - 1, 1);
+                g.fillCircle(cx + 3, cy - 1, 1);
+                break;
+            case 'iceshroom':
+                g.fillStyle(0xAAE0FF, 0.3);
+                g.fillCircle(cx, cy, 14);
+                g.fillStyle(0x4A8ABB);
+                g.fillRect(cx - 2, cy + 5, 4, 8);
+                g.fillStyle(0x5AAADF);
+                g.fillEllipse(cx, cy, 22, 16);
+                g.fillStyle(0xFFFFFF, 0.6);
+                g.fillTriangle(cx, cy - 8, cx - 2, cy - 4, cx + 2, cy - 4);
+                break;
+            case 'doomshroom':
+                g.fillStyle(0xFF2200, 0.15);
+                g.fillCircle(cx, cy, 14);
+                g.fillStyle(0x5A2A3A);
+                g.fillEllipse(cx, cy, 22, 16);
+                g.fillStyle(0x1A0A0A);
+                g.fillEllipse(cx - 3, cy - 2, 3, 4);
+                g.fillEllipse(cx + 3, cy - 2, 3, 4);
+                g.fillStyle(0xFF4400, 0.5);
+                g.fillTriangle(cx, cy - 10, cx - 2, cy - 6, cx + 2, cy - 6);
+                break;
         }
         return g;
     }
@@ -387,6 +690,75 @@ class GameScene extends Phaser.Scene {
         this.shovelButton = { container, bg, zone, width, height };
     }
 
+    createProgressBar() {
+        const barX = GAME_WIDTH / 2 - 80;
+        const barY = 52;
+        const barWidth = 160;
+        const barHeight = 12;
+
+        // 进度条背景
+        const barBg = this.add.graphics();
+        barBg.fillStyle(0x333333, 0.8);
+        barBg.fillRoundedRect(barX, barY, barWidth, barHeight, 4);
+
+        // 进度条填充
+        const barFill = this.add.graphics();
+        barFill.fillStyle(0x4CAF50);
+        barFill.fillRoundedRect(barX, barY, 0, barHeight, 4);
+
+        // 进度标签
+        const label = this.add.text(GAME_WIDTH / 2, barY + barHeight + 6, '', {
+            font: '11px Arial',
+            fill: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5, 0);
+
+        this.progressBar = { barX, barY, barWidth, barHeight, barBg, barFill, label };
+    }
+
+    updateProgressBar() {
+        if (!this.progressBar) return;
+        const { barX, barY, barWidth, barHeight, barFill, label } = this.progressBar;
+
+        if (this.isSurvivalMode) {
+            // 生存模式：显示存活波次
+            barFill.clear();
+            barFill.fillStyle(0x4CAF50);
+            const waveProgress = (this.survivalWaveNumber % 10) / 10;
+            barFill.fillRoundedRect(barX, barY, Math.max(barWidth * waveProgress, 4), barHeight, 4);
+            const remaining = this.zombiesRemaining > 0 ? ` - 剩余${this.zombiesRemaining}个僵尸` : '';
+            label.setText(`生存第 ${this.survivalWaveNumber} 波${remaining}`);
+            return;
+        }
+
+        const totalWaves = this.levelData.waves.length;
+        const currentWave = Math.min(this.waveIndex, totalWaves);
+
+        // 基于击杀进度计算：已击杀僵尸数 / 总僵尸数
+        const progress = this.totalZombies > 0 ? this.killedZombies / this.totalZombies : 0;
+
+        barFill.clear();
+        if (this.allWavesSpawned && this.killedZombies >= this.totalZombies) {
+            // 全清完成 - 金色
+            barFill.fillStyle(0xFFD700);
+        } else if (this.allWavesSpawned) {
+            // 已生成完毕但还有僵尸存活 - 绿色
+            barFill.fillStyle(0x66BB6A);
+        } else {
+            // 进行中 - 绿色
+            barFill.fillStyle(0x4CAF50);
+        }
+        barFill.fillRoundedRect(barX, barY, Math.max(barWidth * progress, 4), barHeight, 4);
+
+        const remaining = this.zombiesRemaining > 0 ? ` - 剩余${this.zombiesRemaining}个僵尸` : '';
+        label.setText(`波次 ${currentWave}/${totalWaves}${remaining}`);
+    }
+
+    onZombieKilled() {
+        this.killedZombies++;
+    }
+
     createPauseButton() {
         const x = GAME_WIDTH - 60;
         const y = GAME_HEIGHT - 30;
@@ -407,7 +779,8 @@ class GameScene extends Phaser.Scene {
     }
 
     createLawnmowers() {
-        for (let row = 0; row < GRID.rows; row++) {
+        const rows = this.gridRows || GRID.rows;
+        for (let row = 0; row < rows; row++) {
             const pos = gridManager.getCellPosition(row, -1);
             const mower = this.add.container(pos.x + 30, pos.y);
 
@@ -439,12 +812,16 @@ class GameScene extends Phaser.Scene {
         // 启用topOnly模式 - 只有最顶层的交互对象响应点击
         this.input.topOnly = true;
 
-        // 草坪点击事件 - 用于种植和铲子
-        // 注意：这会在没有其他交互对象被点击时触发
+        // 草坪点击事件 - 用于种植、铲子和阳光收集
         this.input.on('pointerdown', (pointer, currentlyOver) => {
             if (this.isGameOver || this.isPaused) return;
 
-            // 如果点击了阳光或其他交互对象，不处理草坪点击
+            // 尝试收集阳光（手动碰撞检测作为备用方案）
+            if (this.tryCollectSun(pointer.x, pointer.y)) {
+                return; // 已处理阳光收集
+            }
+
+            // 如果点击了其他交互对象（如卡片），不处理草坪点击
             if (currentlyOver && currentlyOver.length > 0) return;
 
             // 只在草坪区域响应（排除UI区域）
@@ -473,6 +850,22 @@ class GameScene extends Phaser.Scene {
         this.input.on('pointermove', (pointer) => {
             this.updateCursorPreview(pointer.x, pointer.y);
         });
+    }
+
+    // 手动检测并收集阳光（备用方案，解决Phaser Container hitArea问题）
+    tryCollectSun(px, py) {
+        for (let i = this.suns.length - 1; i >= 0; i--) {
+            const sun = this.suns[i];
+            if (!sun || sun.collected || !sun.active) continue;
+
+            // 计算点击位置到阳光中心的距离
+            const dist = Phaser.Math.Distance.Between(px, py, sun.x, sun.y);
+            if (dist < 30) { // 30像素的收集半径
+                sun.collect();
+                return true;
+            }
+        }
+        return false;
     }
 
     updateCursorPreview(px, py) {
@@ -542,13 +935,44 @@ class GameScene extends Phaser.Scene {
 
     placePlant(row, col) {
         if (!this.selectedPlant) return;
-        if (gridManager.isOccupied(row, col)) return;
 
-        const cfg = PLANT_CONFIG[this.selectedPlant];
-        if (this.sunAmount < cfg.cost) return;
+        const plantType = this.selectedPlant;
+        const cfg = PLANT_CONFIG[plantType];
+        const effectiveCost = Math.round(cfg.cost * this.costMultiplier);
+        if (this.sunAmount < effectiveCost) return;
+
+        // 检查放置限制
+        const existing = gridManager.getPlant(row, col);
+
+        if (this.hasPool) {
+            const isWaterRow = row >= 2 && row <= 3;
+            if (isWaterRow) {
+                if (plantType === 'lilypad') {
+                    // 睡莲只能放空水格
+                    if (existing) return;
+                } else {
+                    // 其他植物需要睡莲垫底
+                    if (!existing || existing.type !== 'lilypad') return;
+                }
+            } else {
+                // 非水行：正常占用检查
+                if (existing) return;
+            }
+        } else if (this.hasSlope) {
+            if (plantType === 'flowerpot') {
+                // 花盆只能放空格
+                if (existing) return;
+            } else {
+                // 其他植物需要花盆垫底
+                if (!existing || existing.type !== 'flowerpot') return;
+            }
+        } else {
+            // 普通关卡：正常占用检查
+            if (existing) return;
+        }
 
         // 扣除阳光
-        this.sunAmount -= cfg.cost;
+        this.sunAmount -= effectiveCost;
         this.updateSunDisplay();
 
         // 创建植物
@@ -564,6 +988,41 @@ class GameScene extends Phaser.Scene {
             case 'chomper': plant = new Chomper(this, pos.x, pos.y, row, col); break;
             case 'repeater': plant = new Repeater(this, pos.x, pos.y, row, col); break;
             case 'potatomine': plant = new PotatoMine(this, pos.x, pos.y, row, col); break;
+            case 'puffshroom': plant = new Puffshroom(this, pos.x, pos.y, row, col); break;
+            case 'sunshroom': plant = new Sunshroom(this, pos.x, pos.y, row, col); break;
+            case 'fumeshroom': plant = new Fumeshroom(this, pos.x, pos.y, row, col); break;
+            case 'gravebuster': plant = new GraveBuster(this, pos.x, pos.y, row, col); break;
+            case 'hypnoshroom': plant = new Hypnoshroom(this, pos.x, pos.y, row, col); break;
+            case 'scaredyshroom': plant = new Scaredyshroom(this, pos.x, pos.y, row, col); break;
+            case 'iceshroom': plant = new Iceshroom(this, pos.x, pos.y, row, col); break;
+            case 'doomshroom': plant = new Doomshroom(this, pos.x, pos.y, row, col); break;
+            // Pool plants
+            case 'lilypad': plant = new Lilypad(this, pos.x, pos.y, row, col); break;
+            case 'squash': plant = new Squash(this, pos.x, pos.y, row, col); break;
+            case 'threepeater': plant = new Threepeater(this, pos.x, pos.y, row, col); break;
+            case 'tanglekelp': plant = new TangleKelp(this, pos.x, pos.y, row, col); break;
+            case 'jalapeno': plant = new Jalapeno(this, pos.x, pos.y, row, col); break;
+            case 'spikeweed': plant = new Spikeweed(this, pos.x, pos.y, row, col); break;
+            case 'torchwood': plant = new Torchwood(this, pos.x, pos.y, row, col); break;
+            case 'tallnut': plant = new Tallnut(this, pos.x, pos.y, row, col); break;
+            // Fog plants
+            case 'seashroom': plant = new Seashroom(this, pos.x, pos.y, row, col); break;
+            case 'plantern': plant = new Plantern(this, pos.x, pos.y, row, col); break;
+            case 'cactus': plant = new Cactus(this, pos.x, pos.y, row, col); break;
+            case 'blover': plant = new Blover(this, pos.x, pos.y, row, col); break;
+            case 'splitpea': plant = new Splitpea(this, pos.x, pos.y, row, col); break;
+            case 'starfruit': plant = new Starfruit(this, pos.x, pos.y, row, col); break;
+            case 'pumpkin': plant = new Pumpkin(this, pos.x, pos.y, row, col); break;
+            case 'magnetshroom': plant = new Magnetshroom(this, pos.x, pos.y, row, col); break;
+            // Roof plants
+            case 'cabbagepult': plant = new Cabbagepult(this, pos.x, pos.y, row, col); break;
+            case 'kernelpult': plant = new Kernelpult(this, pos.x, pos.y, row, col); break;
+            case 'melonpult': plant = new Melonpult(this, pos.x, pos.y, row, col); break;
+            case 'coffeebean': plant = new Coffeebean(this, pos.x, pos.y, row, col); break;
+            case 'garlic': plant = new Garlic(this, pos.x, pos.y, row, col); break;
+            case 'flowerpot': plant = new Flowerpot(this, pos.x, pos.y, row, col); break;
+            case 'umbrellaleaf': plant = new Umbrellaleaf(this, pos.x, pos.y, row, col); break;
+            case 'marigold': plant = new Marigold(this, pos.x, pos.y, row, col); break;
             default: return;
         }
 
@@ -598,7 +1057,8 @@ class GameScene extends Phaser.Scene {
 
     updateCardAvailability() {
         this.plantCards.forEach(card => {
-            const canAfford = this.sunAmount >= card.cfg.cost;
+            const effectiveCost = Math.round(card.cfg.cost * this.costMultiplier);
+            const canAfford = this.sunAmount >= effectiveCost;
             const isCooling = card.cooling;
             // 降低不可用卡片的透明度
             card.container.setAlpha((canAfford && !isCooling) ? 1 : 0.5);
@@ -607,7 +1067,7 @@ class GameScene extends Phaser.Scene {
 
     removePlantAt(row, col) {
         const plant = gridManager.getPlant(row, col);
-        if (plant) {
+        if (plant && typeof plant.die === 'function') {
             plant.die();
         }
     }
@@ -620,7 +1080,8 @@ class GameScene extends Phaser.Scene {
         card.cooldownMask.setVisible(true);
         this.updateCardAvailability();
 
-        this.time.delayedCall(card.cfg.cooldown, () => {
+        const effectiveCooldown = Math.round(card.cfg.cooldown * this.cooldownMultiplier);
+        this.time.delayedCall(effectiveCooldown, () => {
             card.cooling = false;
             card.cooldownMask.setVisible(false);
             this.updateCardAvailability();
@@ -633,6 +1094,19 @@ class GameScene extends Phaser.Scene {
     }
 
     startNextWave() {
+        if (this.isSurvivalMode) {
+            // 生存模式：动态生成波次
+            const wave = SURVIVAL_CONFIG.getWave(this.survivalWaveNumber);
+            this.survivalWaveNumber++;
+            this.waveZombies = [...wave.zombies];
+            this.zombieSpawnTimer = wave.delay;
+            this.waveIndex++;
+            this.waveText.setText(`波次: ${this.survivalWaveNumber}`);
+            this.waveEndWaiting = false;
+            this.waveEndTimer = 0;
+            return;
+        }
+
         if (this.waveIndex >= this.levelData.waves.length) {
             this.allWavesSpawned = true;
             return;
@@ -644,6 +1118,10 @@ class GameScene extends Phaser.Scene {
         this.waveIndex++;
 
         this.waveText.setText(`波次: ${this.waveIndex}/${this.levelData.waves.length}`);
+
+        // 重置波次结束等待
+        this.waveEndWaiting = false;
+        this.waveEndTimer = 0;
     }
 
     spawnZombie(type, row) {
@@ -658,6 +1136,26 @@ class GameScene extends Phaser.Scene {
             case 'conehead': zombie = new ConeheadZombie(this, x, y, row); break;
             case 'buckethead': zombie = new BucketheadZombie(this, x, y, row); break;
             case 'polevault': zombie = new PoleVaultZombie(this, x, y, row); break;
+            // Night zombies
+            case 'newspaper': zombie = new NewspaperZombie(this, x, y, row); break;
+            case 'screendoor': zombie = new ScreenDoorZombie(this, x, y, row); break;
+            case 'football': zombie = new FootballZombie(this, x, y, row); break;
+            case 'dancing': zombie = new DancingZombie(this, x, y, row); break;
+            case 'backupdancer': zombie = new BackupDancer(this, x, y, row); break;
+            // Pool zombies
+            case 'duckytube': zombie = new DuckyTubeZombie(this, x, y, row); break;
+            case 'snorkel': zombie = new SnorkelZombie(this, x, y, row); break;
+            case 'zomboni': zombie = new ZomboniZombie(this, x, y, row); break;
+            case 'dolphinrider': zombie = new DolphinRiderZombie(this, x, y, row); break;
+            // Fog zombies
+            case 'jackbox': zombie = new JackboxZombie(this, x, y, row); break;
+            case 'balloon': zombie = new BalloonZombie(this, x, y, row); break;
+            // Roof zombies
+            case 'bungee': zombie = new BungeeZombie(this, x, y, row); break;
+            case 'catapult': zombie = new CatapultZombie(this, x, y, row); break;
+            case 'ladder': zombie = new LadderZombie(this, x, y, row); break;
+            case 'gargantuar': zombie = new GargantuarZombie(this, x, y, row); break;
+            case 'imp': zombie = new ImpZombie(this, x, y, row); break;
             default: zombie = new BasicZombie(this, x, y, row); break;
         }
 
@@ -667,7 +1165,8 @@ class GameScene extends Phaser.Scene {
 
     spawnSun() {
         const x = Phaser.Math.Between(GRID.startX, GRID.startX + GRID.cols * GRID.cellWidth);
-        const targetY = Phaser.Math.Between(GRID.startY + 50, GRID.startY + GRID.rows * GRID.cellHeight - 50);
+        const rows = this.gridRows || GRID.rows;
+        const targetY = Phaser.Math.Between(GRID.startY + 50, GRID.startY + rows * GRID.cellHeight - 50);
         const sun = new Sun(this, x, -20, targetY, true);
         this.suns.push(sun);
     }
@@ -675,9 +1174,125 @@ class GameScene extends Phaser.Scene {
     togglePause() {
         this.isPaused = !this.isPaused;
         if (this.isPaused) {
-            this.scene.pause();
+            this.physics.pause();
+            this.showPauseMenu();
         } else {
-            this.scene.resume();
+            this.physics.resume();
+            this.hidePauseMenu();
+        }
+    }
+
+    showPauseMenu() {
+        if (this.pauseMenuContainer) return;
+
+        const container = this.add.container(0, 0).setDepth(200);
+
+        // 半透明遮罩
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 0.6);
+        overlay.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        container.add(overlay);
+
+        // 暂停标题面板
+        const panelBg = this.add.graphics();
+        panelBg.fillStyle(0x2d2d44, 0.95);
+        panelBg.fillRoundedRect(GAME_WIDTH / 2 - 130, GAME_HEIGHT / 2 - 120, 260, 260, 16);
+        panelBg.lineStyle(2, 0x4CAF50);
+        panelBg.strokeRoundedRect(GAME_WIDTH / 2 - 130, GAME_HEIGHT / 2 - 120, 260, 260, 16);
+        container.add(panelBg);
+
+        // 标题
+        const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 85, '游戏暂停', {
+            font: 'bold 30px Arial',
+            fill: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5, 0.5);
+        container.add(title);
+
+        // 继续游戏按钮
+        this.createPauseMenuButton(container, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 25, '继续游戏', 0x4CAF50, () => {
+            this.togglePause();
+        });
+
+        // 重新开始按钮
+        this.createPauseMenuButton(container, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 35, '重新开始', 0xFF8C00, () => {
+            this.isPaused = false;
+            this.physics.resume();
+            this.scene.restart({ level: this.levelIndex });
+        });
+
+        // 返回菜单按钮
+        this.createPauseMenuButton(container, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 95, '返回菜单', 0xCC3333, () => {
+            this.isPaused = false;
+            this.physics.resume();
+            this.scene.start('MenuScene');
+        });
+
+        this.pauseMenuContainer = container;
+
+        // 入场动画
+        container.setAlpha(0);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            duration: 200
+        });
+    }
+
+    getBrighterColor(color, amount) {
+        let r = (color >> 16) & 0xFF;
+        let g = (color >> 8) & 0xFF;
+        let b = color & 0xFF;
+        r = Math.min(255, r + amount);
+        g = Math.min(255, g + amount);
+        b = Math.min(255, b + amount);
+        return (r << 16) | (g << 8) | b;
+    }
+
+    createPauseMenuButton(container, x, y, text, color, callback) {
+        const brighter = this.getBrighterColor(color, 40);
+        const brightest = this.getBrighterColor(color, 70);
+
+        const bg = this.add.graphics();
+        bg.fillStyle(color);
+        bg.fillRoundedRect(x - 85, y - 22, 170, 44, 10);
+        bg.fillStyle(brighter, 0.5);
+        bg.fillRoundedRect(x - 82, y - 19, 164, 22, 8);
+        container.add(bg);
+
+        const label = this.add.text(x, y, text, {
+            font: 'bold 20px Arial',
+            fill: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5, 0.5);
+        container.add(label);
+
+        const zone = this.add.zone(x, y, 170, 44).setInteractive({ useHandCursor: true });
+        container.add(zone);
+
+        zone.on('pointerdown', callback);
+        zone.on('pointerover', () => {
+            bg.clear();
+            bg.fillStyle(brightest);
+            bg.fillRoundedRect(x - 85, y - 22, 170, 44, 10);
+            bg.fillStyle(this.getBrighterColor(brightest, 30), 0.5);
+            bg.fillRoundedRect(x - 82, y - 19, 164, 22, 8);
+        });
+        zone.on('pointerout', () => {
+            bg.clear();
+            bg.fillStyle(color);
+            bg.fillRoundedRect(x - 85, y - 22, 170, 44, 10);
+            bg.fillStyle(brighter, 0.5);
+            bg.fillRoundedRect(x - 82, y - 19, 164, 22, 8);
+        });
+    }
+
+    hidePauseMenu() {
+        if (this.pauseMenuContainer) {
+            this.pauseMenuContainer.destroy();
+            this.pauseMenuContainer = null;
         }
     }
 
@@ -813,19 +1428,17 @@ class GameScene extends Phaser.Scene {
         const menuZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 102, 120, 45)
             .setInteractive({ useHandCursor: true }).setDepth(102);
         menuZone.on('pointerdown', () => {
-            this.scene.start('MenuScene');
+            if (this.gameMode === 'adventure') {
+                this.scene.start('MenuScene');
+            } else {
+                this.scene.start('ExtraModeSelectScene');
+            }
         });
     }
 
     onLevelComplete() {
         if (this.isGameOver) return;
         this.isGameOver = true;
-
-        // 更新解锁进度
-        const current = this.registry.get('unlockedLevel') || 0;
-        if (this.levelIndex + 1 > current && this.levelIndex + 1 < LEVELS.length) {
-            this.registry.set('unlockedLevel', this.levelIndex + 1);
-        }
 
         // 胜利界面
         const overlay = this.add.graphics();
@@ -840,6 +1453,15 @@ class GameScene extends Phaser.Scene {
             strokeThickness: 5
         }).setOrigin(0.5, 0.5).setDepth(101);
 
+        // 关卡名
+        const levelName = this.levelData.name || this.levelData.id || `关卡 ${this.levelIndex + 1}`;
+        this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20, `关卡 ${levelName}`, {
+            font: '22px Arial',
+            fill: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5, 0.5).setDepth(101);
+
         // 入场动画
         winText.setScale(0);
         this.tweens.add({
@@ -850,43 +1472,78 @@ class GameScene extends Phaser.Scene {
             ease: 'Back.easeOut'
         });
 
-        // 下一关按钮（如果不是最后一关）
-        if (this.levelIndex + 1 < LEVELS.length) {
-            const nextBg = this.add.graphics().setDepth(101);
-            nextBg.fillStyle(0x4CAF50);
-            nextBg.fillRoundedRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT / 2 + 10, 140, 50, 10);
+        if (this.gameMode === 'adventure') {
+            // 冒险模式：更新解锁进度
+            const nextLevel = this.levelIndex + 1;
+            if (nextLevel < LEVELS.length) {
+                saveManager.setUnlockedLevel(nextLevel);
+            }
 
-            const nextText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 35, '下一关', {
-                font: 'bold 24px Arial',
+            // 下一关按钮
+            if (nextLevel < LEVELS.length) {
+                const nextBg = this.add.graphics().setDepth(101);
+                nextBg.fillStyle(0x4CAF50);
+                nextBg.fillRoundedRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT / 2 + 15, 140, 50, 10);
+
+                const nextText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40, '下一关 →', {
+                    font: 'bold 22px Arial',
+                    fill: '#FFFFFF'
+                }).setOrigin(0.5, 0.5).setDepth(102);
+
+                const nextZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40, 140, 50)
+                    .setInteractive({ useHandCursor: true }).setDepth(102);
+                nextZone.on('pointerdown', () => {
+                    this.scene.start('GameScene', { level: nextLevel, mode: 'adventure' });
+                });
+            }
+
+            // 返回关卡选择
+            const selBg = this.add.graphics().setDepth(101);
+            selBg.fillStyle(0x666666);
+            selBg.fillRoundedRect(GAME_WIDTH / 2 - 60, GAME_HEIGHT / 2 + 80, 120, 45, 10);
+
+            const selText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 102, '返回选关', {
+                font: 'bold 18px Arial',
                 fill: '#FFFFFF'
             }).setOrigin(0.5, 0.5).setDepth(102);
 
-            const nextZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 35, 140, 50)
+            const selZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 102, 120, 45)
                 .setInteractive({ useHandCursor: true }).setDepth(102);
-            nextZone.on('pointerdown', () => {
-                this.scene.start('GameScene', { level: this.levelIndex + 1 });
+            selZone.on('pointerdown', () => {
+                this.scene.start('LevelSelectScene', { worldIndex: this.worldIndex });
+            });
+        } else {
+            // 额外模式：返回额外模式选择
+            const retryBg = this.add.graphics().setDepth(101);
+            retryBg.fillStyle(0x4CAF50);
+            retryBg.fillRoundedRect(GAME_WIDTH / 2 - 70, GAME_HEIGHT / 2 + 15, 140, 50, 10);
+
+            const retryText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40, '再来一次', {
+                font: 'bold 22px Arial',
+                fill: '#FFFFFF'
+            }).setOrigin(0.5, 0.5).setDepth(102);
+
+            const retryZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40, 140, 50)
+                .setInteractive({ useHandCursor: true }).setDepth(102);
+            retryZone.on('pointerdown', () => {
+                this.scene.start('GameScene', { level: this.levelIndex, mode: this.gameMode });
+            });
+
+            const selBg = this.add.graphics().setDepth(101);
+            selBg.fillStyle(0x666666);
+            selBg.fillRoundedRect(GAME_WIDTH / 2 - 60, GAME_HEIGHT / 2 + 80, 120, 45, 10);
+
+            const selText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 102, '返回', {
+                font: 'bold 18px Arial',
+                fill: '#FFFFFF'
+            }).setOrigin(0.5, 0.5).setDepth(102);
+
+            const selZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 102, 120, 45)
+                .setInteractive({ useHandCursor: true }).setDepth(102);
+            selZone.on('pointerdown', () => {
+                this.scene.start('ExtraModeSelectScene');
             });
         }
-
-        // 返回菜单
-        const menuBg = this.add.graphics().setDepth(101);
-        menuBg.fillStyle(0x666666);
-        menuBg.fillRoundedRect(GAME_WIDTH / 2 - 60, GAME_HEIGHT / 2 + 75, 120, 45, 10);
-
-        const menuText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 97, '返回菜单', {
-            font: 'bold 18px Arial',
-            fill: '#FFFFFF'
-        }).setOrigin(0.5, 0.5).setDepth(102);
-
-        const menuZone = this.add.zone(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 97, 120, 45)
-            .setInteractive({ useHandCursor: true }).setDepth(102);
-        menuZone.on('pointerdown', () => {
-            this.scene.start('MenuScene');
-        });
-
-        this.time.delayedCall(1500, () => {
-            this.scene.start('VictoryScene', { level: this.levelIndex });
-        });
     }
 
     update(time, delta) {
@@ -900,19 +1557,43 @@ class GameScene extends Phaser.Scene {
                 this.spawnZombie(zombieData.type, zombieData.row);
                 this.zombieSpawnTimer = 800 + Math.random() * 400;
             }
-        } else if (this.waveIndex < this.levelData.waves.length) {
-            // 当前波次所有僵尸生成完毕，检查是否需要开始下一波
+        } else if (this.isSurvivalMode || this.waveIndex < this.levelData.waves.length) {
+            // 当前波次所有僵尸生成完毕，等待最小间隔后开始下一波
+            if (!this.waveEndWaiting) {
+                this.waveEndWaiting = true;
+                this.waveEndTimer = 0;
+            }
+            this.waveEndTimer += delta;
             const aliveZombies = this.zombies.filter(z => z && z.alive);
-            if (aliveZombies.length <= 2) {
+            if (aliveZombies.length <= 2 && this.waveEndTimer >= this.minWaveGap) {
+                this.waveEndWaiting = false;
+                this.waveEndTimer = 0;
                 this.startNextWave();
             }
         }
 
-        // 天空掉落阳光
-        this.sunFallTimer += delta;
-        if (this.sunFallTimer >= SUN.fallInterval) {
-            this.sunFallTimer = 0;
-            this.spawnSun();
+        // 天空掉落阳光（夜间不掉落）
+        if (this.sunFalls) {
+            this.sunFallTimer += delta;
+            if (this.sunFallTimer >= this.sunFallInterval) {
+                this.sunFallTimer = 0;
+                this.spawnSun();
+            }
+        }
+
+        // 自动收集阳光
+        if (this.autoCollectSun) {
+            this.suns.forEach(sun => {
+                if (sun && !sun.collected && sun.active) {
+                    // 收集所有在草坪区域内的阳光
+                    const rows = this.gridRows || GRID.rows;
+                    const inPlayArea = sun.y > GRID.startY && sun.y < GRID.startY + rows * GRID.cellHeight
+                        && sun.x > GRID.startX - 40 && sun.x < GRID.startX + GRID.cols * GRID.cellWidth + 40;
+                    if (inPlayArea) {
+                        sun.collect();
+                    }
+                }
+            });
         }
 
         // 更新所有实体
@@ -922,6 +1603,11 @@ class GameScene extends Phaser.Scene {
         this.zombies.forEach(z => {
             if (z && z.active && z.alive) z.update(time, delta);
         });
+
+        // 更新迷雾（有Plantern时更新驱散区域）
+        if (this.hasFog && this.fogOverlay) {
+            this.updateFogOverlay();
+        }
 
         // 碰撞检测
         this.checkProjectileCollisions();
@@ -933,12 +1619,17 @@ class GameScene extends Phaser.Scene {
         // 更新僵尸计数
         this.zombiesRemaining = this.zombies.filter(z => z && z.alive).length;
 
-        // 胜利检查
-        if (!this.allWavesSpawned && this.waveIndex >= this.levelData.waves.length && this.waveZombies.length === 0) {
-            this.allWavesSpawned = true;
-        }
-        if (this.allWavesSpawned) {
-            this.checkWinCondition();
+        // 更新进度条
+        this.updateProgressBar();
+
+        // 胜利检查（生存模式没有胜利，只有失败）
+        if (!this.isSurvivalMode) {
+            if (!this.allWavesSpawned && this.waveIndex >= this.levelData.waves.length && this.waveZombies.length === 0) {
+                this.allWavesSpawned = true;
+            }
+            if (this.allWavesSpawned) {
+                this.checkWinCondition();
+            }
         }
     }
 }

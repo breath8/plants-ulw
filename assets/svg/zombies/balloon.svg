@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80">
+  <!-- 气球僵尸 -->
+  <style>
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    .float { animation: float 2s ease-in-out infinite; }
+  </style>
+  <g class="float">
+    <!-- 气球绳子 -->
+    <line x1="30" y1="20" x2="30" y2="8" stroke="#8B6914" stroke-width="1"/>
+    <!-- 气球 -->
+    <circle fill="#FF3333" cx="30" cy="6" r="12"/>
+    <circle fill="#FF6666" cx="26" cy="3" r="4" opacity="0.5"/>
+    <circle fill="#FF9999" cx="25" cy="2" r="2" opacity="0.4"/>
+    <!-- 头 -->
+    <circle fill="#7B8B6F" cx="30" cy="28" r="12"/>
+    <!-- 眼睛 -->
+    <circle fill="#FFF" cx="26" cy="26" r="3.5"/>
+    <circle fill="#FFF" cx="34" cy="26" r="3.5"/>
+    <circle fill="#C00" cx="27" cy="26" r="1.8"/>
+    <circle fill="#C00" cx="35" cy="26" r="1.8"/>
+    <!-- 嘴 -->
+    <ellipse cx="30" cy="33" rx="5" ry="3" fill="#4a3a2a"/>
+    <!-- 身体 -->
+    <rect fill="#8B6914" x="20" y="38" width="20" height="22" rx="3"/>
+    <polygon fill="#6a4a0a" points="30,38 27,50 30,48 33,50"/>
+    <!-- 左臂 -->
+    <rect fill="#7B8B6F" x="12" y="40" width="8" height="18" rx="3" transform="rotate(10,16,40)"/>
+    <!-- 右臂 -->
+    <rect fill="#7B8B6F" x="40" y="40" width="8" height="18" rx="3" transform="rotate(-15,44,40)"/>
+    <!-- 左腿 -->
+    <rect fill="#4a4a2a" x="21" y="58" width="7" height="16" rx="3"/>
+    <rect fill="#3a3a1a" x="19" y="72" width="10" height="4" rx="2"/>
+    <!-- 右腿 -->
+    <rect fill="#4a4a2a" x="32" y="58" width="7" height="16" rx="3"/>
+    <rect fill="#3a3a1a" x="30" y="72" width="10" height="4" rx="2"/>
+  </g>
+</svg>

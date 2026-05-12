@@ -11,7 +11,8 @@ const config = {
             debug: false
         }
     },
-    scene: [BootScene, MenuScene, LevelSelectScene, GameScene, VictoryScene],
+    scene: [BootScene, MenuScene, WorldSelectScene, LevelSelectScene, SettingsScene, GameScene, VictoryScene,
+            ExtraModeSelectScene, MiniGameSelectScene, PuzzleSelectScene, VasebreakerScene, IZombieScene, ZenGardenScene],
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
