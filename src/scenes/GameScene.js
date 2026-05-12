@@ -67,6 +67,13 @@ class GameScene extends Phaser.Scene {
         this.waveEndTimer = 0;              // 波次结束后等待计时器
         this.minWaveGap = 5000;             // 波次最小间隔时间(ms)
         this.waveEndWaiting = false;        // 是否在等待波次间隔
+
+        // 传送带系统
+        this.isConveyor = this.levelData.isConveyor || false;
+        this.conveyorItems = [];       // 传送带上的植物列表
+        this.conveyorTimer = 0;
+        this.conveyorInterval = 8000;  // 每8秒生成一个植物
+        this.maxConveyorCards = 8;     // 传送带最大卡片数
     }
 
     create() {
@@ -348,19 +355,29 @@ class GameScene extends Phaser.Scene {
         const cardSpacing = 5;
 
         this.plantCards = [];
-        const availablePlants = this.levelData.plants;
 
-        for (let i = 0; i < availablePlants.length; i++) {
-            const plantType = availablePlants[i];
-            const cfg = PLANT_CONFIG[plantType];
-            const x = cardStartX + i * (cardWidth + cardSpacing);
+        if (this.isConveyor) {
+            // 传送带模式：绘制传送带背景并初始化
+            this.createConveyorBackground(cardStartX, cardY, cardWidth, cardHeight, cardSpacing);
+            // 初始生成4个植物
+            for (let i = 0; i < 4; i++) {
+                this.generateConveyorPlant();
+            }
+        } else {
+            const availablePlants = this.levelData.plants;
+            for (let i = 0; i < availablePlants.length; i++) {
+                const plantType = availablePlants[i];
+                const cfg = PLANT_CONFIG[plantType];
+                const x = cardStartX + i * (cardWidth + cardSpacing);
 
-            const card = this.createPlantCard(x, cardY, plantType, cfg, cardWidth, cardHeight);
-            this.plantCards.push(card);
+                const card = this.createPlantCard(x, cardY, plantType, cfg, cardWidth, cardHeight);
+                this.plantCards.push(card);
+            }
         }
 
-        // === 铲子按钮 ===
-        const shovelX = cardStartX + availablePlants.length * (cardWidth + cardSpacing) + 10;
+        // === 铲子按钮（传送带模式也保留铲子） ===
+        const plantCount = this.isConveyor ? 1 : this.levelData.plants.length;
+        const shovelX = cardStartX + Math.max(plantCount, 4) * (cardWidth + cardSpacing) + 10;
         this.createShovelButton(shovelX, cardY, cardWidth, cardHeight);
 
         // === 波次信息 ===
@@ -716,6 +733,166 @@ class GameScene extends Phaser.Scene {
         return g;
     }
 
+    // ===== 传送带系统 =====
+
+    createConveyorBackground(startX, cardY, cardWidth, cardHeight, cardSpacing) {
+        // 传送带底栏背景
+        const beltWidth = GAME_WIDTH - startX - 10;
+        const beltBg = this.add.graphics();
+        beltBg.fillStyle(0x3A2A1A, 0.9);
+        beltBg.fillRoundedRect(startX - 5, cardY - 5, beltWidth, cardHeight + 10, 8);
+        beltBg.lineStyle(2, 0x8B6914, 0.8);
+        beltBg.strokeRoundedRect(startX - 5, cardY - 5, beltWidth, cardHeight + 10, 8);
+
+        // 传送带纹理条纹
+        for (let i = 0; i < 20; i++) {
+            const sx = startX + i * 35;
+            const stripe = this.add.graphics();
+            stripe.fillStyle(0x5A4A2A, 0.3);
+            stripe.fillRect(sx, cardY + cardHeight - 12, 20, 8);
+        }
+    }
+
+    generateConveyorPlant() {
+        if (!this.isConveyor || !this.levelData.conveyorPlants) return;
+        if (this.conveyorItems.length >= this.maxConveyorCards) return;
+
+        // 随机选择一种植物
+        const plants = this.levelData.conveyorPlants;
+        const plantType = plants[Math.floor(Math.random() * plants.length)];
+        const cfg = PLANT_CONFIG[plantType];
+        if (!cfg) return;
+
+        // 创建传送带卡片
+        const card = this.createConveyorCard(plantType, cfg);
+        this.conveyorItems.push({ type: plantType, container: card.container, cfg: cfg, selectBorder: card.selectBorder });
+
+        // 重新排列所有卡片位置（新卡片从右滑入）
+        this.updateConveyorPositions(true);
+    }
+
+    createConveyorCard(plantType, cfg) {
+        const container = this.add.container(0, 0);
+        container.setDepth(10);
+
+        const cardWidth = 55;
+        const cardHeight = 70;
+
+        // 卡片背景
+        const bg = this.add.graphics();
+        bg.fillStyle(0x4A3A1A);
+        bg.fillRoundedRect(0, 0, cardWidth, cardHeight, 5);
+        bg.fillStyle(0x6B4F2A);
+        bg.fillRoundedRect(2, 2, cardWidth - 4, cardHeight - 25, 4);
+        container.add(bg);
+
+        // 植物图标
+        const iconGfx = this.createPlantPreview(plantType, cardWidth / 2, 22 + 8);
+        if (iconGfx) container.add(iconGfx);
+
+        // 植物名字
+        const info = PLANT_INFO[plantType];
+        const label = info ? info.name : plantType;
+        const text = this.add.text(cardWidth / 2, cardHeight - 10, label, {
+            font: '10px Arial',
+            fill: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5, 0.5);
+        container.add(text);
+
+        // 选中高亮边框（默认隐藏）
+        const selectBorder = this.add.graphics();
+        selectBorder.lineStyle(2, 0xFFD700);
+        selectBorder.strokeRoundedRect(-2, -2, cardWidth + 4, cardHeight + 4, 6);
+        selectBorder.setVisible(false);
+        container.add(selectBorder);
+
+        // 交互区 - 作为Container的子元素，坐标相对于Container
+        const zone = this.add.zone(0, 0, cardWidth, cardHeight)
+            .setInteractive({ useHandCursor: true });
+        container.add(zone);
+
+        zone.on('pointerdown', () => {
+            // 取消铲子模式
+            this.shovelActive = false;
+            if (this.shovelButton) {
+                this.shovelButton.bg.clear();
+                this.shovelButton.bg.fillStyle(0x8B4513);
+                this.shovelButton.bg.fillRoundedRect(0, 0, this.shovelButton.width, this.shovelButton.height, 5);
+                this.shovelButton.bg.fillStyle(0xA0522D);
+                this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
+            }
+
+            // 清除所有普通卡片的高亮
+            this.plantCards.forEach(card => {
+                card.selectBorder.setVisible(false);
+                card.container.setScale(1);
+            });
+            // 清除传送带卡片的高亮
+            this.conveyorItems.forEach(item => {
+                if (item.selectBorder) item.selectBorder.setVisible(false);
+            });
+
+            // 如果点击的是已选中的，取消选择
+            if (this.selectedPlant === plantType) {
+                this.clearSelection();
+                return;
+            }
+
+            this.selectedPlant = plantType;
+            selectBorder.setVisible(true);
+
+            // 光标预览
+            this.clearCursorPreview();
+            this.createCursorPreview(plantType);
+        });
+
+        return { container, bg, selectBorder, zone };
+    }
+
+    updateConveyorPositions(animate) {
+        const cardStartX = 175;
+        const cardY = 15;
+        const cardWidth = 55;
+        const cardSpacing = 5;
+
+        this.conveyorItems.forEach((item, index) => {
+            const targetX = cardStartX + index * (cardWidth + cardSpacing);
+            const targetY = cardY;
+
+            if (animate && item.container.x !== targetX) {
+                this.tweens.add({
+                    targets: item.container,
+                    x: targetX,
+                    y: targetY,
+                    duration: 200,
+                    ease: 'Quad.easeOut'
+                });
+            } else {
+                item.container.x = targetX;
+                item.container.y = targetY;
+            }
+        });
+    }
+
+    removeConveyorPlant(plantType) {
+        // 找到第一个匹配的传送带卡片并移除
+        const idx = this.conveyorItems.findIndex(item => item.type === plantType);
+        if (idx === -1) return false;
+
+        const item = this.conveyorItems[idx];
+        // 销毁容器
+        if (item.container) {
+            item.container.destroy();
+        }
+        this.conveyorItems.splice(idx, 1);
+
+        // 重新排列剩余卡片
+        this.updateConveyorPositions(true);
+        return true;
+    }
+
     createShovelButton(x, y, width, height) {
         const container = this.add.container(x, y);
 
@@ -990,12 +1167,19 @@ class GameScene extends Phaser.Scene {
 
         const plantType = this.selectedPlant;
         const cfg = PLANT_CONFIG[plantType];
-        const effectiveCost = Math.round(cfg.cost * this.costMultiplier);
-        if (this.sunAmount < effectiveCost) return;
 
-        // 冷却检查（可重复种植同一植物时防止无视冷却）
-        const card = this.plantCards.find(c => c.type === plantType);
-        if (!card || card.cooling) return;
+        if (this.isConveyor) {
+            // 传送带模式：不消耗阳光，没有冷却
+            const hasItem = this.conveyorItems.some(item => item.type === plantType);
+            if (!hasItem) return;
+        } else {
+            const effectiveCost = Math.round(cfg.cost * this.costMultiplier);
+            if (this.sunAmount < effectiveCost) return;
+
+            // 冷却检查
+            const card = this.plantCards.find(c => c.type === plantType);
+            if (!card || card.cooling) return;
+        }
 
         // 检查放置限制
         const existing = gridManager.getPlant(row, col);
@@ -1027,9 +1211,12 @@ class GameScene extends Phaser.Scene {
             if (existing) return;
         }
 
-        // 扣除阳光
-        this.sunAmount -= effectiveCost;
-        this.updateSunDisplay();
+        // 扣除阳光（传送带模式不消耗阳光）
+        if (!this.isConveyor) {
+            const effectiveCost = Math.round(cfg.cost * this.costMultiplier);
+            this.sunAmount -= effectiveCost;
+            this.updateSunDisplay();
+        }
 
         // 创建植物
         const pos = gridManager.getCellPosition(row, col);
@@ -1085,11 +1272,16 @@ class GameScene extends Phaser.Scene {
         gridManager.placePlant(row, col, plant);
         this.plants.push(plant);
 
-        // 开始冷却
-        this.startCooldown(this.selectedPlant);
-
-        // 更新卡片可用状态
-        this.updateCardAvailability();
+        if (this.isConveyor) {
+            // 传送带模式：移除已放置的卡片，不触发冷却
+            this.removeConveyorPlant(this.selectedPlant);
+            this.clearSelection();
+        } else {
+            // 普通模式：开始冷却
+            this.startCooldown(this.selectedPlant);
+            // 更新卡片可用状态
+            this.updateCardAvailability();
+        }
     }
 
     clearSelection() {
@@ -1099,6 +1291,11 @@ class GameScene extends Phaser.Scene {
         this.plantCards.forEach(card => {
             card.selectBorder.setVisible(false);
             card.container.setScale(1);
+        });
+
+        // 清除传送带卡片选中高亮
+        this.conveyorItems.forEach(item => {
+            if (item.selectBorder) item.selectBorder.setVisible(false);
         });
 
         // 清除预览
@@ -1655,6 +1852,15 @@ class GameScene extends Phaser.Scene {
                     }
                 }
             });
+        }
+
+        // 传送带植物生成
+        if (this.isConveyor) {
+            this.conveyorTimer += delta;
+            if (this.conveyorTimer >= this.conveyorInterval) {
+                this.conveyorTimer = 0;
+                this.generateConveyorPlant();
+            }
         }
 
         // 更新所有实体
