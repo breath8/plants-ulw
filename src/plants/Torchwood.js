@@ -41,8 +41,7 @@ class Torchwood extends Plant {
         pea.add(g);
         pea.graphics = g;
 
-        // 添加火焰拖尾效果
-        pea.setTint(0xFFAA00);
+        // 火豌豆视觉 - 豌豆已有重绘的火焰颜色，无需setTint
     }
 
     flickerAnimation() {

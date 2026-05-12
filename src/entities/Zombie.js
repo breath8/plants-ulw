@@ -28,6 +28,11 @@ class Zombie extends Phaser.GameObjects.Container {
         // 创建视觉
         this.createVisual(type);
 
+        // 颜色覆盖层（替代Container.setTint，因Phaser 3.80 Container不支持setTint）
+        this.tintOverlay = this.scene.add.graphics();
+        this.tintOverlay.setVisible(false);
+        this.add(this.tintOverlay);
+
         // 物理设置
         this.body.setVelocityX(-this.speed);
         this.body.setSize(30, 80);
@@ -51,6 +56,18 @@ class Zombie extends Phaser.GameObjects.Container {
         this.drawBaseZombie(g, type);
         this.add(g);
         this.graphics = g;
+    }
+
+    applyTint(color) {
+        this.tintOverlay.clear();
+        this.tintOverlay.fillStyle(color, 0.35);
+        this.tintOverlay.fillCircle(0, -30, 14);   // 头
+        this.tintOverlay.fillRoundedRect(-12, -16, 24, 28, 3); // 身体
+        this.tintOverlay.setVisible(true);
+    }
+
+    clearTint() {
+        this.tintOverlay.setVisible(false);
     }
 
     drawBaseZombie(g, type) {
@@ -273,8 +290,8 @@ class Zombie extends Phaser.GameObjects.Container {
         this.slowTimer = 5000;
         this.speed = this.baseSpeed * 0.5;
 
-        // 蓝色色调
-        this.setTint(0x88CCFF);
+        // 蓝色色调（Container不支持setTint，使用覆盖层）
+        this.applyTint(0x88CCFF);
 
         if (!this.eating) {
             this.body.setVelocityX(-this.speed);

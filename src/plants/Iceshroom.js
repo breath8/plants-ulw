@@ -74,15 +74,15 @@ class Iceshroom extends Plant {
                 if (!zombie.eating) {
                     zombie.body.setVelocityX(0);
                 }
-                // 蓝色色调
-                zombie.setTint(0x6688CC);
+                // 蓝色色调（Container不支持setTint，使用覆盖层）
+                zombie.applyTint(0x6688CC);
             }
         });
 
         // 冻结结束后清除蓝色色调
         this.scene.time.delayedCall(freezeDuration, () => {
             this.scene.zombies.forEach(zombie => {
-                if (zombie.alive && !zombie.slowed) {
+                if (zombie.alive) {
                     zombie.clearTint();
                 }
             });

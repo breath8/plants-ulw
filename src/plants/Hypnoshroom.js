@@ -79,7 +79,7 @@ class Hypnoshroom extends Plant {
             zombie.body.setVelocityX(zombie.baseSpeed);
 
             // 改变色调表示被催眠
-            zombie.setTint(0xFF88FF);
+            zombie.applyTint(0xFF88FF);
 
             // 标记为已催眠
             zombie.hypnotized = true;

@@ -88,14 +88,15 @@ class SettingsScene extends Phaser.Scene {
             width / 2 - 200, startY + rowHeight * 3,
             '植物冷却倍率',
             settings.cooldownMultiplier,
-            0.25, 3, 0.25,
+            0.01, 3, 0.01,
             (val) => `×${val.toFixed(2)}`,
             (val) => {
-                const clamped = Math.max(0.25, Math.min(3, Math.round(val * 100) / 100));
+                const clamped = Math.max(0.01, Math.min(3, Math.round(val * 100) / 100));
                 settings.cooldownMultiplier = clamped;
                 saveManager.updateSettings({ cooldownMultiplier: clamped });
                 this.refreshAll();
-            }
+            },
+            'cooldownMultiplier'
         );
 
         // === 阳光消耗倍率 ===
@@ -110,7 +111,8 @@ class SettingsScene extends Phaser.Scene {
                 settings.costMultiplier = clamped;
                 saveManager.updateSettings({ costMultiplier: clamped });
                 this.refreshAll();
-            }
+            },
+            'costMultiplier'
         );
 
         // === 自动收集阳光 ===
@@ -253,7 +255,8 @@ class SettingsScene extends Phaser.Scene {
     }
 
     // 创建滑块设置行
-    createSettingSlider(x, y, label, currentValue, min, max, step, formatFunc, onChange) {
+    // settingsKey: 可选，拖拽时直接保存用，避免scene.restart中断拖拽
+    createSettingSlider(x, y, label, currentValue, min, max, step, formatFunc, onChange, settingsKey) {
         // 标签
         this.add.text(x + 200, y + 5, label, {
             font: 'bold 20px Arial',
@@ -288,6 +291,58 @@ class SettingsScene extends Phaser.Scene {
         const handle = this.add.graphics();
         handle.fillStyle(0xFFFFFF);
         handle.fillCircle(fillX, sliderY + 4, 10);
+
+        // 滑块拖拽区域（透明覆盖层，手动追踪拖拽）
+        const dragZone = this.add.rectangle(sliderX + sliderWidth / 2, sliderY + 4, sliderWidth, 24)
+            .setInteractive({ useHandCursor: true })
+            .setAlpha(0.001);
+
+        const updateSliderVisual = (value) => {
+            const r = (value - min) / (max - min);
+            const fx = sliderX + r * sliderWidth;
+            // 重绘填充条
+            sliderFill.clear();
+            sliderFill.fillStyle(0x4CAF50);
+            sliderFill.fillRoundedRect(sliderX, sliderY, fx - sliderX, 8, 4);
+            // 重绘手柄
+            handle.clear();
+            handle.fillStyle(0xFFFFFF);
+            handle.fillCircle(fx, sliderY + 4, 10);
+        };
+
+        const updateFromPointer = (pointer, shouldRefresh) => {
+            const ratio = Phaser.Math.Clamp((pointer.x - sliderX) / sliderWidth, 0, 1);
+            const steps = Math.round((ratio * (max - min)) / step);
+            const newVal = Math.round(Math.max(min, Math.min(max, min + steps * step)) * 100) / 100;
+            valueText.setText(formatFunc(newVal));
+            updateSliderVisual(newVal);
+            if (shouldRefresh) {
+                onChange(newVal);
+            } else if (settingsKey) {
+                // 拖拽时直接保存，避免scene.restart中断拖拽
+                saveManager.updateSettings({ [settingsKey]: newVal });
+            }
+        };
+
+        let isDragging = false;
+
+        dragZone.on('pointerdown', (pointer) => {
+            isDragging = true;
+            updateFromPointer(pointer, false);
+        });
+
+        this.input.on('pointermove', (pointer) => {
+            if (isDragging) {
+                updateFromPointer(pointer, false);
+            }
+        });
+
+        this.input.on('pointerup', () => {
+            if (isDragging) {
+                isDragging = false;
+                this.refreshAll();
+            }
+        });
 
         // 减号按钮
         const decBg = this.add.graphics();

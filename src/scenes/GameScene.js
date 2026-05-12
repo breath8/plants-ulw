@@ -380,9 +380,6 @@ class GameScene extends Phaser.Scene {
             strokeThickness: 1
         }).setOrigin(1, 0.5);
 
-        // === 进度条 ===
-        this.createProgressBar();
-
         // === 暂停按钮 ===
         this.createPauseButton();
     }
@@ -425,6 +422,27 @@ class GameScene extends Phaser.Scene {
         cooldownMask.setVisible(false);
         container.add(cooldownMask);
 
+        // === 提示信息（鼠标悬停显示） ===
+        const infoTipInner = this.add.graphics();
+        infoTipInner.fillStyle(0x1a1a2e, 0.92);
+        infoTipInner.fillRoundedRect(0, 0, 180, 56, 6);
+        infoTipInner.lineStyle(1, 0xFFD700, 0.5);
+        infoTipInner.strokeRoundedRect(0, 0, 180, 56, 6);
+
+        const infoName = this.add.text(10, 6, '', {
+            font: 'bold 13px Arial', fill: '#FFD700'
+        });
+        const infoDesc = this.add.text(10, 26, '', {
+            font: '11px Arial', fill: '#CCCCCC', wordWrap: { width: 160 }
+        });
+        const infoCost = this.add.text(10, 42, '', {
+            font: '11px Arial', fill: '#FFEC8B'
+        });
+
+        const infoTip = this.add.container(0, 0, [infoTipInner, infoName, infoDesc, infoCost]);
+        infoTip.setDepth(100);
+        infoTip.setVisible(false);
+
         // 交互区域
         const zone = this.add.zone(x + width / 2, y + height / 2, width, height)
             .setInteractive({ useHandCursor: true });
@@ -434,7 +452,27 @@ class GameScene extends Phaser.Scene {
             this.onCardClick(plantType, container, cfg, cooldownMask);
         });
 
+        const showTooltip = () => {
+            const info = PLANT_INFO[plantType];
+            if (!info) return;
+            infoName.setText(info.name);
+            infoDesc.setText(info.desc);
+            const effCost = Math.round(cfg.cost * this.costMultiplier);
+            let extra = '';
+            if (cfg.damage) extra += ` 伤害:${cfg.damage}`;
+            if (cfg.fireRate) extra += ` 射速:${(cfg.fireRate / 1000).toFixed(1)}s`;
+            infoCost.setText(`☀${effCost}${extra}`);
+            // 定位在卡片下方居中
+            const tipX = x + width / 2 - 90;
+            const tipY = y + height + 4;
+            infoTip.setPosition(tipX, tipY);
+            infoTip.setVisible(true);
+            // 移到顶层
+            infoTip.setDepth(100);
+        };
+
         zone.on('pointerover', () => {
+            showTooltip();
             const effCost = Math.round(cfg.cost * this.costMultiplier);
             if (!cooldownMask.visible && this.sunAmount >= effCost) {
                 container.setScale(1.05);
@@ -443,6 +481,7 @@ class GameScene extends Phaser.Scene {
 
         zone.on('pointerout', () => {
             container.setScale(1);
+            infoTip.setVisible(false);
         });
 
         return {
@@ -455,7 +494,8 @@ class GameScene extends Phaser.Scene {
             width: width,
             height: height,
             cooling: false,
-            cfg: cfg
+            cfg: cfg,
+            infoTip: infoTip
         };
     }
 
@@ -492,14 +532,28 @@ class GameScene extends Phaser.Scene {
                 g.fillCircle(cx, cy - 2, 6);
                 break;
             case 'wallnut':
-                g.fillStyle(0x8B6914);
+                g.fillStyle(0xCD853F);
                 g.fillEllipse(cx, cy + 2, 20, 26);
+                g.lineStyle(1.5, 0x8B6914, 0.4);
+                g.strokeEllipse(cx, cy + 2, 20, 26);
+                // 眼睛
                 g.fillStyle(0xFFFFFF);
-                g.fillCircle(cx - 3, cy - 2, 2);
-                g.fillCircle(cx + 3, cy - 2, 2);
-                g.fillStyle(0x000000);
-                g.fillCircle(cx - 3, cy - 2, 1);
-                g.fillCircle(cx + 3, cy - 2, 1);
+                g.fillCircle(cx - 4, cy - 3, 2.5);
+                g.fillCircle(cx + 4, cy - 3, 2.5);
+                g.fillStyle(0x222222);
+                g.fillCircle(cx - 4, cy - 3, 1.2);
+                g.fillCircle(cx + 4, cy - 3, 1.2);
+                // 经典锯齿嘴
+                g.lineStyle(1.2, 0x5A3810);
+                g.beginPath();
+                g.moveTo(cx - 6, cy + 4);
+                g.lineTo(cx - 4, cy + 7);
+                g.lineTo(cx - 2, cy + 4);
+                g.lineTo(cx, cy + 7);
+                g.lineTo(cx + 2, cy + 4);
+                g.lineTo(cx + 4, cy + 7);
+                g.lineTo(cx + 6, cy + 4);
+                g.strokePath();
                 break;
             case 'snowpea':
                 g.fillStyle(0x2A6A8C);
@@ -547,16 +601,34 @@ class GameScene extends Phaser.Scene {
                 g.fillCircle(cx + 2, cy - 2, 1.5);
                 break;
             case 'potatomine':
+                // 底部泥土
                 g.fillStyle(0x5A4020);
                 g.fillEllipse(cx, cy + 8, 22, 8);
-                g.fillStyle(0x8B6914);
+                // 土豆身体（土黄色，区别于坚果的棕色）
+                g.fillStyle(0xC8A85C);
                 g.fillEllipse(cx, cy + 2, 16, 20);
+                // 引信（从顶部伸出）
+                g.lineStyle(1.5, 0x5A3A1A);
+                g.beginPath();
+                g.moveTo(cx, cy - 12);
+                g.lineTo(cx + 2, cy - 18);
+                g.lineTo(cx + 6, cy - 20);
+                g.strokePath();
+                // 引信火花
+                g.fillStyle(0xFF6600);
+                g.fillCircle(cx + 6, cy - 20, 3);
+                g.fillStyle(0xFFCC00, 0.6);
+                g.fillCircle(cx + 6, cy - 20, 1.5);
+                // 眼睛（圆形惊讶表情）
                 g.fillStyle(0xFFFFFF);
-                g.fillCircle(cx - 3, cy - 2, 2);
-                g.fillCircle(cx + 3, cy - 2, 2);
-                g.fillStyle(0x000000);
-                g.fillCircle(cx - 3, cy - 2, 1);
-                g.fillCircle(cx + 3, cy - 2, 1);
+                g.fillCircle(cx - 4, cy - 2, 2.5);
+                g.fillCircle(cx + 4, cy - 2, 2.5);
+                g.fillStyle(0x333333);
+                g.fillCircle(cx - 4, cy - 2, 1.2);
+                g.fillCircle(cx + 4, cy - 2, 1.2);
+                // 惊讶O形嘴
+                g.fillStyle(0x5A3A1A);
+                g.fillEllipse(cx, cy + 5, 4, 3);
                 break;
             case 'puffshroom':
                 g.fillStyle(0x8B6AAF);
@@ -656,10 +728,17 @@ class GameScene extends Phaser.Scene {
 
         // 铲子图形
         const shovel = this.add.graphics();
-        shovel.fillStyle(0x8B8B8B);
-        shovel.fillRect(width / 2 - 3, 8, 6, 25);
-        shovel.fillStyle(0xAAAAAA);
-        shovel.fillEllipse(width / 2, 8, 16, 10);
+        // 铲柄（木质）
+        shovel.fillStyle(0x8B5A2B);
+        shovel.fillRect(width / 2 - 2, 5, 4, 22);
+        // 铲头（金属灰）
+        shovel.fillStyle(0x999999);
+        shovel.fillRect(width / 2 - 7, 23, 14, 9);
+        shovel.fillStyle(0xBBBBBB);
+        shovel.fillRect(width / 2 - 7, 23, 14, 3);
+        // 铲头底部圆弧
+        shovel.fillStyle(0x888888);
+        shovel.fillEllipse(width / 2, 32, 16, 5);
         container.add(shovel);
 
         const text = this.add.text(width / 2, height - 15, '铲子', {
@@ -674,6 +753,7 @@ class GameScene extends Phaser.Scene {
         zone.on('pointerdown', () => {
             this.shovelActive = !this.shovelActive;
             this.selectedPlant = null;
+            this.clearCursorPreview();
             if (this.shovelActive) {
                 bg.clear();
                 bg.fillStyle(0xAA6633);
@@ -688,71 +768,6 @@ class GameScene extends Phaser.Scene {
         });
 
         this.shovelButton = { container, bg, zone, width, height };
-    }
-
-    createProgressBar() {
-        const barX = GAME_WIDTH / 2 - 80;
-        const barY = 52;
-        const barWidth = 160;
-        const barHeight = 12;
-
-        // 进度条背景
-        const barBg = this.add.graphics();
-        barBg.fillStyle(0x333333, 0.8);
-        barBg.fillRoundedRect(barX, barY, barWidth, barHeight, 4);
-
-        // 进度条填充
-        const barFill = this.add.graphics();
-        barFill.fillStyle(0x4CAF50);
-        barFill.fillRoundedRect(barX, barY, 0, barHeight, 4);
-
-        // 进度标签
-        const label = this.add.text(GAME_WIDTH / 2, barY + barHeight + 6, '', {
-            font: '11px Arial',
-            fill: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 1
-        }).setOrigin(0.5, 0);
-
-        this.progressBar = { barX, barY, barWidth, barHeight, barBg, barFill, label };
-    }
-
-    updateProgressBar() {
-        if (!this.progressBar) return;
-        const { barX, barY, barWidth, barHeight, barFill, label } = this.progressBar;
-
-        if (this.isSurvivalMode) {
-            // 生存模式：显示存活波次
-            barFill.clear();
-            barFill.fillStyle(0x4CAF50);
-            const waveProgress = (this.survivalWaveNumber % 10) / 10;
-            barFill.fillRoundedRect(barX, barY, Math.max(barWidth * waveProgress, 4), barHeight, 4);
-            const remaining = this.zombiesRemaining > 0 ? ` - 剩余${this.zombiesRemaining}个僵尸` : '';
-            label.setText(`生存第 ${this.survivalWaveNumber} 波${remaining}`);
-            return;
-        }
-
-        const totalWaves = this.levelData.waves.length;
-        const currentWave = Math.min(this.waveIndex, totalWaves);
-
-        // 基于击杀进度计算：已击杀僵尸数 / 总僵尸数
-        const progress = this.totalZombies > 0 ? this.killedZombies / this.totalZombies : 0;
-
-        barFill.clear();
-        if (this.allWavesSpawned && this.killedZombies >= this.totalZombies) {
-            // 全清完成 - 金色
-            barFill.fillStyle(0xFFD700);
-        } else if (this.allWavesSpawned) {
-            // 已生成完毕但还有僵尸存活 - 绿色
-            barFill.fillStyle(0x66BB6A);
-        } else {
-            // 进行中 - 绿色
-            barFill.fillStyle(0x4CAF50);
-        }
-        barFill.fillRoundedRect(barX, barY, Math.max(barWidth * progress, 4), barHeight, 4);
-
-        const remaining = this.zombiesRemaining > 0 ? ` - 剩余${this.zombiesRemaining}个僵尸` : '';
-        label.setText(`波次 ${currentWave}/${totalWaves}${remaining}`);
     }
 
     onZombieKilled() {
@@ -830,14 +845,6 @@ class GameScene extends Phaser.Scene {
 
             if (this.shovelActive) {
                 this.removePlantAt(cell.row, cell.col);
-                this.shovelActive = false;
-                if (this.shovelButton) {
-                    this.shovelButton.bg.clear();
-                    this.shovelButton.bg.fillStyle(0x8B4513);
-                    this.shovelButton.bg.fillRoundedRect(0, 0, this.shovelButton.width, this.shovelButton.height, 5);
-                    this.shovelButton.bg.fillStyle(0xA0522D);
-                    this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
-                }
                 return;
             }
 
@@ -869,16 +876,45 @@ class GameScene extends Phaser.Scene {
     }
 
     updateCursorPreview(px, py) {
-        // 移除旧预览
-        if (this.cursorPreview) {
-            this.cursorPreview.destroy();
-            this.cursorPreview = null;
-        }
-
-        if (!this.selectedPlant) return;
+        this.clearCursorPreview();
 
         const cell = gridManager.getCellFromPosition(px, py);
         if (!cell) return;
+
+        if (this.shovelActive) {
+            // 铲子模式：格子白色高亮 + 铲子图标跟随鼠标
+            const pos = gridManager.getCellPosition(cell.row, cell.col);
+            const g = this.add.graphics();
+            g.fillStyle(0xFFFFFF, 0.25);
+            g.fillRoundedRect(
+                pos.x - GRID.cellWidth / 2 + 2,
+                pos.y - GRID.cellHeight / 2 + 2,
+                GRID.cellWidth - 4,
+                GRID.cellHeight - 4,
+                4
+            );
+            g.setDepth(5);
+            this.cursorPreview = g;
+
+            // 跟随鼠标的小铲子图标
+            const icon = this.add.graphics();
+            // 铲柄
+            icon.fillStyle(0x8B5A2B);
+            icon.fillRect(px + 12, py - 8, 3, 18);
+            // 铲头
+            icon.fillStyle(0x999999);
+            icon.fillRect(px + 8, py + 8, 11, 7);
+            icon.fillStyle(0xBBBBBB);
+            icon.fillRect(px + 8, py + 8, 11, 3);
+            // 铲头弧度
+            icon.fillStyle(0x888888);
+            icon.fillEllipse(px + 14, py + 15, 14, 4);
+            icon.setDepth(100);
+            this.cursorIcon = icon;
+            return;
+        }
+
+        if (!this.selectedPlant) return;
         if (gridManager.isOccupied(cell.row, cell.col)) return;
 
         const pos = gridManager.getCellPosition(cell.row, cell.col);
@@ -892,6 +928,11 @@ class GameScene extends Phaser.Scene {
             4
         );
         this.cursorPreview.setDepth(5);
+
+        // 跟随鼠标的小植物图标
+        const icon = this.createPlantPreview(this.selectedPlant, px + 15, py - 10);
+        icon.setDepth(100);
+        this.cursorIcon = icon;
     }
 
     setupCollisions() {
@@ -917,6 +958,16 @@ class GameScene extends Phaser.Scene {
             this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
         }
 
+        // 取消铲子模式
+        this.shovelActive = false;
+        if (this.shovelButton) {
+            this.shovelButton.bg.clear();
+            this.shovelButton.bg.fillStyle(0x8B4513);
+            this.shovelButton.bg.fillRoundedRect(0, 0, this.shovelButton.width, this.shovelButton.height, 5);
+            this.shovelButton.bg.fillStyle(0xA0522D);
+            this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
+        }
+
         // 如果点击的是已选中的植物，取消选择
         if (this.selectedPlant === plantType) {
             this.clearSelection();
@@ -925,6 +976,7 @@ class GameScene extends Phaser.Scene {
 
         // 选中植物（允许选中，种植时再检查阳光）
         this.selectedPlant = plantType;
+        this.clearCursorPreview();
 
         // 显示选中高亮
         const card = this.plantCards.find(c => c.type === plantType);
@@ -940,6 +992,10 @@ class GameScene extends Phaser.Scene {
         const cfg = PLANT_CONFIG[plantType];
         const effectiveCost = Math.round(cfg.cost * this.costMultiplier);
         if (this.sunAmount < effectiveCost) return;
+
+        // 冷却检查（可重复种植同一植物时防止无视冷却）
+        const card = this.plantCards.find(c => c.type === plantType);
+        if (!card || card.cooling) return;
 
         // 检查放置限制
         const existing = gridManager.getPlant(row, col);
@@ -1032,9 +1088,6 @@ class GameScene extends Phaser.Scene {
         // 开始冷却
         this.startCooldown(this.selectedPlant);
 
-        // 清除选中状态
-        this.clearSelection();
-
         // 更新卡片可用状态
         this.updateCardAvailability();
     }
@@ -1049,9 +1102,17 @@ class GameScene extends Phaser.Scene {
         });
 
         // 清除预览
+        this.clearCursorPreview();
+    }
+
+    clearCursorPreview() {
         if (this.cursorPreview) {
             this.cursorPreview.destroy();
             this.cursorPreview = null;
+        }
+        if (this.cursorIcon) {
+            this.cursorIcon.destroy();
+            this.cursorIcon = null;
         }
     }
 
@@ -1618,9 +1679,6 @@ class GameScene extends Phaser.Scene {
 
         // 更新僵尸计数
         this.zombiesRemaining = this.zombies.filter(z => z && z.alive).length;
-
-        // 更新进度条
-        this.updateProgressBar();
 
         // 胜利检查（生存模式没有胜利，只有失败）
         if (!this.isSurvivalMode) {

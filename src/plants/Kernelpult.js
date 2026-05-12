@@ -128,22 +128,20 @@ class KernelProjectile extends Phaser.GameObjects.Container {
             if (!zombie.alive || zombie.row !== this.row) return;
             const dist = Phaser.Math.Distance.Between(this.x, this.y, zombie.x, zombie.y);
             if (dist < 25) {
-                zombie.takeDamage(this.damage);
-                // 黄油眩晕效果 - 僵尸暂停1秒
                 if (this.isButter) {
+                    zombie.takeDamage(40);
                     zombie.body.setVelocityX(0);
-                    zombie.eating = true; // 暂停移动
-                    this.scene.time.delayedCall(1000, () => {
+                    zombie.eating = true;
+                    zombie.applyTint(0xFFC107);
+                    this.scene.time.delayedCall(4000, () => {
                         if (zombie.alive) {
                             zombie.eating = false;
                             zombie.body.setVelocityX(-zombie.speed);
+                            zombie.clearTint();
                         }
                     });
-                    // 黄油视觉特效
-                    zombie.setTint(0xFFC107);
-                    this.scene.time.delayedCall(1000, () => {
-                        if (zombie.alive) zombie.clearTint();
-                    });
+                } else {
+                    zombie.takeDamage(this.damage);
                 }
                 this.hit();
             }

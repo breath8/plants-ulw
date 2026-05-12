@@ -187,7 +187,7 @@ class GargantuarZombie extends Zombie {
         });
 
         // 受伤变红
-        this.setTint(0xFF6666);
+        this.applyTint(0xFF6666);
         this.scene.time.delayedCall(200, () => {
             if (this.alive) this.clearTint();
         });

@@ -69,8 +69,8 @@ class NewspaperZombie extends Zombie {
         // 重绘视觉 - 报纸撕裂效果
         this.redrawVisual();
 
-        // 暴怒视觉反馈 - 设置红色色调
-        this.setTint(0xFF6666);
+        // 暴怒视觉反馈 - 红色覆盖层
+        this.applyTint(0xFF6666);
         this.scene.time.delayedCall(300, () => {
             if (this.alive) this.clearTint();
         });
