@@ -245,6 +245,7 @@ class Zombie extends Phaser.GameObjects.Container {
         if (this.eatTimer >= this.eatRate) {
             this.eatTimer = 0;
             this.currentPlant.takeDamage(this.damage);
+            audioManager.playSFX('sfx_chomp', 0.5);
         }
     }
 
@@ -306,6 +307,9 @@ class Zombie extends Phaser.GameObjects.Container {
         if (this.scene && this.scene.onZombieKilled) {
             this.scene.onZombieKilled();
         }
+
+        // 播放僵尸死亡音效
+        audioManager.playSFX('sfx_zombie_die', 0.6);
 
         if (this.walkTween) this.walkTween.stop();
         if (this.eatTween) this.eatTween.stop();

@@ -81,6 +81,12 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.resetFX();
         this.cameras.main.setAlpha(1);
 
+        // 初始化音频管理器并播放关卡BGM
+        audioManager.init(this);
+        audioManager.playWorldBGM(this.worldIndex, this.isConveyor);
+        this.groanTimer = 0;
+        this.groanInterval = 5000 + Math.random() * 5000; // 僵尸低吟随机间隔
+
         // 重置网格（支持动态行数）
         gridManager.reset(this.gridRows);
 
@@ -1117,7 +1123,10 @@ class GameScene extends Phaser.Scene {
     }
 
     onCardClick(plantType, container, cfg, cooldownMask) {
-        if (cooldownMask.visible) return;
+        if (cooldownMask.visible) {
+            audioManager.playSFX('sfx_error');
+            return;
+        }
 
         // 清除所有卡片的选中状态
         this.plantCards.forEach(card => {
@@ -1272,6 +1281,9 @@ class GameScene extends Phaser.Scene {
         gridManager.placePlant(row, col, plant);
         this.plants.push(plant);
 
+        // 播放种植音效
+        audioManager.playSFX('sfx_plant');
+
         if (this.isConveyor) {
             // 传送带模式：移除已放置的卡片，不触发冷却
             this.removeConveyorPlant(this.selectedPlant);
@@ -1377,6 +1389,11 @@ class GameScene extends Phaser.Scene {
 
         this.waveText.setText(`波次: ${this.waveIndex}/${this.levelData.waves.length}`);
 
+        // 最后一波播放大波来袭音效
+        if (this.waveIndex >= this.levelData.waves.length) {
+            audioManager.playSFX('sfx_huge_wave');
+        }
+
         // 重置波次结束等待
         this.waveEndWaiting = false;
         this.waveEndTimer = 0;
@@ -1433,9 +1450,11 @@ class GameScene extends Phaser.Scene {
         this.isPaused = !this.isPaused;
         if (this.isPaused) {
             this.physics.pause();
+            audioManager.pauseBGM();
             this.showPauseMenu();
         } else {
             this.physics.resume();
+            audioManager.resumeBGM();
             this.hidePauseMenu();
         }
     }
@@ -1606,6 +1625,7 @@ class GameScene extends Phaser.Scene {
                     if (zombie && zombie.alive && zombie.row === mower.row) {
                         if (zombie.x < GRID.startX + 20) {
                             mower.active = true;
+                            audioManager.playSFX('sfx_lawn_mower');
                             break;
                         }
                     }
@@ -1870,6 +1890,16 @@ class GameScene extends Phaser.Scene {
         this.zombies.forEach(z => {
             if (z && z.active && z.alive) z.update(time, delta);
         });
+
+        // 僵尸低吟音效（随机间隔）
+        if (this.zombies.filter(z => z && z.alive).length > 0) {
+            this.groanTimer += delta;
+            if (this.groanTimer >= this.groanInterval) {
+                this.groanTimer = 0;
+                this.groanInterval = 5000 + Math.random() * 5000;
+                audioManager.playSFX('sfx_zombie_groan', 0.3);
+            }
+        }
 
         // 更新迷雾（有Plantern时更新驱散区域）
         if (this.hasFog && this.fogOverlay) {

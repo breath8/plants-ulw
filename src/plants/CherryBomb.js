@@ -20,6 +20,9 @@ class CherryBomb extends Plant {
         const range = PLANT_CONFIG.cherrybomb.range;
         const damage = PLANT_CONFIG.cherrybomb.damage;
 
+        // 播放爆炸音效
+        audioManager.playSFX('sfx_explosion');
+
         // 爆炸范围内的僵尸
         this.scene.zombies.forEach(zombie => {
             if (!zombie.alive) return;

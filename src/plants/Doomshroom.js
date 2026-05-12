@@ -58,6 +58,9 @@ class Doomshroom extends Plant {
         const range = PLANT_CONFIG.doomshroom.range;
         const damage = PLANT_CONFIG.doomshroom.damage;
 
+        // 播放爆炸音效
+        audioManager.playSFX('sfx_explosion');
+
         // 爆炸范围内的僵尸
         this.scene.zombies.forEach(zombie => {
             if (!zombie.alive) return;

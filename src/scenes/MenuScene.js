@@ -11,6 +11,10 @@ class MenuScene extends Phaser.Scene {
         // 重置相机状态
         this.cameras.main.resetFX();
 
+        // 初始化音频管理器并播放菜单BGM
+        audioManager.init(this);
+        audioManager.playBGM('bgm_menu');
+
         // 背景
         const bg = this.add.graphics();
         // 天空渐变

@@ -20,6 +20,9 @@ class Jalapeno extends Plant {
     detonate() {
         this.detonated = true;
 
+        // 播放爆炸音效
+        audioManager.playSFX('sfx_explosion');
+
         // 对整行所有僵尸造成伤害
         this.scene.zombies.forEach(zombie => {
             if (zombie.alive && zombie.row === this.row) {

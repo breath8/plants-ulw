@@ -64,6 +64,9 @@ class Projectile extends Phaser.GameObjects.Container {
         this.alive = false;
         if (this.checkBounds) this.checkBounds.destroy();
 
+        // 播放命中音效
+        audioManager.playSFX('sfx_hit', 0.5);
+
         // 击中特效 - 使用简单图形代替粒子
         const hitGfx = this.scene.add.graphics();
         const color = this.type === 'snowpea' ? 0x88CCFF : 0x6ABF3A;

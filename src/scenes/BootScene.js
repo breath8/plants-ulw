@@ -73,35 +73,23 @@ class BootScene extends Phaser.Scene {
         this.load.image('zombie_ladder', 'assets/svg/zombies/ladder.svg');
         this.load.image('zombie_gargantuar', 'assets/svg/zombies/gargantuar.svg');
         this.load.image('zombie_imp', 'assets/svg/zombies/imp.svg');
-        this.load.image('proj_pea', 'assets/svg/projectiles/pea.svg');
-        this.load.image('proj_snowpea', 'assets/svg/projectiles/snowpea.svg');
-        this.load.image('proj_sun', 'assets/svg/projectiles/sun.svg');
-        this.load.image('ui_lawnmower', 'assets/svg/ui/lawnmower.svg');
-        // 显示加载进度
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
 
-        const progressBar = this.add.graphics();
-        const progressBox = this.add.graphics();
-        progressBox.fillStyle(0x222222, 0.8);
-        progressBox.fillRoundedRect(width / 2 - 160, height / 2 - 25, 320, 50, 10);
-
-        const loadingText = this.add.text(width / 2, height / 2 - 50, '加载中...', {
-            font: '20px Arial',
-            fill: '#ffffff'
-        }).setOrigin(0.5, 0.5);
-
-        this.load.on('progress', (value) => {
-            progressBar.clear();
-            progressBar.fillStyle(0x4CAF50, 1);
-            progressBar.fillRoundedRect(width / 2 - 150, height / 2 - 15, 300 * value, 30, 8);
-        });
-
-        this.load.on('complete', () => {
-            progressBar.destroy();
-            progressBox.destroy();
-            loadingText.destroy();
-        });
+        // 加载音频
+        // BGM
+        this.load.audio('bgm_menu', 'assets/sounds/bgm/menu.mp3');
+        this.load.audio('bgm_game_day', 'assets/sounds/bgm/game_day.mp3');
+        this.load.audio('bgm_game_night', 'assets/sounds/bgm/game_night.mp3');
+        this.load.audio('bgm_game_boss', 'assets/sounds/bgm/game_boss.mp3');
+        // SFX
+        this.load.audio('sfx_plant', 'assets/sounds/sfx/plant.wav');
+        this.load.audio('sfx_chomp', 'assets/sounds/sfx/chomp.wav');
+        this.load.audio('sfx_hit', 'assets/sounds/sfx/hit.wav');
+        this.load.audio('sfx_explosion', 'assets/sounds/sfx/explosion.wav');
+        this.load.audio('sfx_zombie_die', 'assets/sounds/sfx/zombie_die.wav');
+        this.load.audio('sfx_zombie_groan', 'assets/sounds/sfx/zombie_groan.wav');
+        this.load.audio('sfx_lawn_mower', 'assets/sounds/sfx/lawn_mower.wav');
+        this.load.audio('sfx_huge_wave', 'assets/sounds/sfx/huge_wave.wav');
+        this.load.audio('sfx_error', 'assets/sounds/sfx/error.wav');
 
         // 创建1像素纹理用于粒子
         const particleGraphics = this.make.graphics({ x: 0, y: 0, add: false });
