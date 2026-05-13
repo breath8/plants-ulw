@@ -1517,7 +1517,7 @@ class GameScene extends Phaser.Scene {
             this.waveZombies = [...wave.zombies];
             this.zombieSpawnTimer = wave.delay;
             this.waveIndex++;
-            this.waveText.setText(`波次: ${this.survivalWaveNumber}`);
+            this.waveText.setText(`波次: ${this.survivalWaveNumber}  关卡 ${this.levelData.name || ''}`);
             this.waveEndWaiting = false;
             this.waveEndTimer = 0;
             return;
@@ -1533,7 +1533,7 @@ class GameScene extends Phaser.Scene {
         this.zombieSpawnTimer = wave.delay;
         this.waveIndex++;
 
-        this.waveText.setText(`波次: ${this.waveIndex}/${this.levelData.waves.length}`);
+        this.waveText.setText(`波次: ${this.waveIndex}/${this.levelData.waves.length}  关卡 ${this.levelData.name}`);
 
         // 最后一波播放大波来袭音效
         if (this.waveIndex >= this.levelData.waves.length) {
