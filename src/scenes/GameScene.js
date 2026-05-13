@@ -73,7 +73,9 @@ class GameScene extends Phaser.Scene {
         this.conveyorItems = [];       // 传送带上的植物列表
         this.conveyorTimer = 0;
         this.conveyorInterval = 8000;  // 每8秒生成一个植物
-        this.maxConveyorCards = 8;     // 传送带最大卡片数
+        this.maxConveyorCards = 6;     // 传送带最大卡片数
+
+        this.isIntroPlaying = false;   // 开局动画是否正在播放
     }
 
     create() {
@@ -97,8 +99,8 @@ class GameScene extends Phaser.Scene {
         this.setupInput();
         this.setupCollisions();
 
-        // 开始第一波
-        this.startNextWave();
+        // 播放开局动画（结束后自动开始第一波）
+        this.showIntroAnimation();
     }
 
     createBackground() {
@@ -151,54 +153,50 @@ class GameScene extends Phaser.Scene {
         }
 
         // 左侧房子区域
+        const houseW = GRID.startX - 4;
         if (this.hasSlope) {
-            // 屋顶 - 没有房子
             g.fillStyle(0x8B4513);
             g.fillRect(0, GRID.startY, GRID.startX, gridHeight);
         } else if (this.isNight) {
-            // 夜间房子 - 暗色
             g.fillStyle(0x1a1a2e);
             g.fillRect(0, GRID.startY, GRID.startX, gridHeight);
             g.fillStyle(0x2a1a0e);
-            g.fillRect(10, 90, 170, 180);
-            // 门
+            g.fillRect(2, GRID.startY, houseW, 120);
             g.fillStyle(0x0a0a0a);
-            g.fillRect(70, 180, 40, 90);
-            // 窗户（亮灯）
+            g.fillRect(houseW / 2 - 15, GRID.startY + 55, 30, 65);
             g.fillStyle(0x4a4a1a);
-            g.fillRect(25, 115, 25, 25);
-            g.fillRect(135, 115, 25, 25);
+            g.fillRect(10, GRID.startY + 15, 20, 20);
+            g.fillRect(houseW - 30, GRID.startY + 15, 20, 20);
         } else {
-            // 白天房子
             g.fillStyle(0x8B7355);
             g.fillRect(0, GRID.startY, GRID.startX, gridHeight);
             g.fillStyle(0xA0522D);
-            g.fillRect(0, 80, 180, 200);
+            g.fillRect(2, GRID.startY - 15, houseW, 130);
             g.fillStyle(0x8B4513);
-            g.fillRect(0, 60, 200, 30);
+            g.fillRect(0, GRID.startY - 28, houseW + 6, 18);
             g.fillStyle(0x654321);
-            g.fillRect(70, 180, 40, 100);
+            g.fillRect(houseW / 2 - 14, GRID.startY + 45, 28, 70);
             g.fillStyle(0xADD8E6);
-            g.fillRect(20, 120, 30, 30);
-            g.fillRect(130, 120, 30, 30);
-            g.lineStyle(2, 0x654321);
-            g.strokeRect(20, 120, 30, 30);
-            g.strokeRect(130, 120, 30, 30);
+            g.fillRect(8, GRID.startY + 10, 24, 24);
+            g.fillRect(houseW - 32, GRID.startY + 10, 24, 24);
+            g.lineStyle(1.5, 0x654321);
+            g.strokeRect(8, GRID.startY + 10, 24, 24);
+            g.strokeRect(houseW - 32, GRID.startY + 10, 24, 24);
             g.beginPath();
-            g.moveTo(35, 120);
-            g.lineTo(35, 150);
+            g.moveTo(20, GRID.startY + 10);
+            g.lineTo(20, GRID.startY + 34);
             g.strokePath();
             g.beginPath();
-            g.moveTo(20, 135);
-            g.lineTo(50, 135);
+            g.moveTo(8, GRID.startY + 22);
+            g.lineTo(32, GRID.startY + 22);
             g.strokePath();
             g.beginPath();
-            g.moveTo(145, 120);
-            g.lineTo(145, 150);
+            g.moveTo(houseW - 20, GRID.startY + 10);
+            g.lineTo(houseW - 20, GRID.startY + 34);
             g.strokePath();
             g.beginPath();
-            g.moveTo(130, 135);
-            g.lineTo(160, 135);
+            g.moveTo(houseW - 32, GRID.startY + 22);
+            g.lineTo(houseW - 8, GRID.startY + 22);
             g.strokePath();
         }
 
@@ -331,98 +329,145 @@ class GameScene extends Phaser.Scene {
     }
 
     createUI() {
-        // === 顶部阳光栏 ===
-        const topBar = this.add.graphics();
-        topBar.fillStyle(0x5C3A1E, 0.9);
-        topBar.fillRoundedRect(10, 5, 150, 40, 8);
-        topBar.fillStyle(0x7B4F2A);
-        topBar.fillRoundedRect(12, 7, 146, 15, 5);
+        const gridW = GRID.cols * GRID.cellWidth;
+        const gridEndX = GRID.startX + gridW;
 
-        // 阳光图标
-        const sunIcon = this.add.graphics();
-        sunIcon.fillStyle(0xFFD700);
-        sunIcon.fillCircle(30, 25, 12);
-        sunIcon.fillStyle(0xFFEC8B);
-        sunIcon.fillCircle(30, 25, 8);
+        // === 顶部状态栏（进度条） ===
+        const barY = 4;
+        const barH = 16;
 
-        // 阳光数量
-        this.sunText = this.add.text(55, 25, String(this.sunAmount), {
-            font: 'bold 20px Arial',
-            fill: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0, 0.5);
+        const statusBg = this.add.graphics();
+        statusBg.setDepth(50);
+        statusBg.fillStyle(0x1A0A00, 0.5);
+        statusBg.fillRoundedRect(GRID.startX - 2, barY - 1, gridW + 4, barH + 8, 4);
+        statusBg.fillStyle(0x3D2B10);
+        statusBg.fillRoundedRect(GRID.startX, barY, gridW, barH + 6, 3);
 
-        // === 植物卡片栏 ===
-        const cardStartX = 175;
-        const cardY = 15;
-        const cardWidth = 55;
-        const cardHeight = 70;
-        const cardSpacing = 5;
+        const fillBg = this.add.graphics();
+        fillBg.setDepth(51);
+        fillBg.fillStyle(0x444444, 0.85);
+        fillBg.fillRoundedRect(GRID.startX + 2, barY + 2, gridW - 4, barH, 2);
+
+        const fillBar = this.add.graphics();
+        fillBar.setDepth(52);
+
+        const totalWaves = this.isSurvivalMode ? '∞' : this.levelData.waves.length;
+        this.waveText = this.add.text(gridEndX - 6, barY + 3, `波次: 0/${totalWaves}  关卡 ${this.levelData.name}`, {
+            font: 'bold 11px Arial', fill: '#FFD700',
+            stroke: '#000000', strokeThickness: 1
+        }).setOrigin(1, 0).setDepth(54);
+
+        // 僵尸头
+        const headSize = 14;
+        const zombieHead = this.add.graphics();
+        zombieHead.setDepth(53);
+        const drawZombieHead = (g, x, y, s) => {
+            g.clear();
+            g.fillStyle(0x5B8C3E); g.fillCircle(x, y, s / 2);
+            g.fillStyle(0xFFFFFF); g.fillCircle(x - 2, y - 2, 2.5); g.fillCircle(x + 2, y - 2, 2.5);
+            g.fillStyle(0xCC0000); g.fillCircle(x - 2, y - 2, 1.2); g.fillCircle(x + 2, y - 2, 1.2);
+            g.lineStyle(1, 0x333333); g.beginPath(); g.moveTo(x - 3, y + 3); g.lineTo(x + 3, y + 3); g.strokePath();
+        };
+        drawZombieHead(zombieHead, GRID.startX, barY + barH / 2 + 3, headSize);
+
+        this.progressBar = {
+            fillBar, zombieHead, drawZombieHead,
+            x: GRID.startX + 2, y: barY + 2,
+            width: gridW - 4, height: barH,
+            headSize, lastProgress: -1
+        };
+
+        const progressText = this.add.text(GRID.startX + 6, barY + barH / 2 + 3, '0%', {
+            font: 'bold 10px Arial', fill: '#FFD700',
+            stroke: '#000000', strokeThickness: 1
+        }).setOrigin(0, 0.5).setDepth(54);
+        this.progressBar.progressText = progressText;
+
+        // === 阳光栏（房子上方） ===
+        const sunBarX = 8;
+        this.add.graphics().setDepth(20)
+            .fillStyle(0x5C3A1E, 0.9)
+            .fillRoundedRect(sunBarX, 2, 95, 28, 6)
+            .fillStyle(0x7B4F2A)
+            .fillRoundedRect(sunBarX + 2, 4, 91, 10, 4);
+        this.add.graphics().setDepth(21)
+            .fillStyle(0xFFD700).fillCircle(sunBarX + 18, 16, 10)
+            .fillStyle(0xFFEC8B).fillCircle(sunBarX + 18, 16, 6);
+        this.sunText = this.add.text(sunBarX + 38, 16, String(this.sunAmount), {
+            font: 'bold 16px Arial', fill: '#FFFFFF',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0, 0.5).setDepth(21);
+
+        // === 植物卡片栏（网格左对齐） ===
+        const cardY = 30;
+        const cardW = 55;
+        const cardH = 60;
+        const cardSpacing = 4;
 
         this.plantCards = [];
 
         if (this.isConveyor) {
-            // 传送带模式：绘制传送带背景并初始化
-            this.createConveyorBackground(cardStartX, cardY, cardWidth, cardHeight, cardSpacing);
-            // 初始生成4个植物
-            for (let i = 0; i < 4; i++) {
-                this.generateConveyorPlant();
-            }
+            this.createConveyorBackground(GRID.startX, cardY, cardW, cardH, cardSpacing);
+            for (let i = 0; i < 4; i++) this.generateConveyorPlant();
         } else {
-            const availablePlants = this.levelData.plants;
-            for (let i = 0; i < availablePlants.length; i++) {
-                const plantType = availablePlants[i];
-                const cfg = PLANT_CONFIG[plantType];
-                const x = cardStartX + i * (cardWidth + cardSpacing);
-
-                const card = this.createPlantCard(x, cardY, plantType, cfg, cardWidth, cardHeight);
+            const plants = this.levelData.plants;
+            for (let i = 0; i < plants.length; i++) {
+                const cfg = PLANT_CONFIG[plants[i]];
+                const x = GRID.startX + i * (cardW + cardSpacing);
+                const card = this.createPlantCard(x, cardY, plants[i], cfg, cardW, cardH);
                 this.plantCards.push(card);
             }
         }
 
-        // === 铲子按钮（传送带模式也保留铲子） ===
-        const plantCount = this.isConveyor ? 1 : this.levelData.plants.length;
-        const shovelX = cardStartX + Math.max(plantCount, 4) * (cardWidth + cardSpacing) + 10;
-        this.createShovelButton(shovelX, cardY, cardWidth, cardHeight);
+        // === 铲子（网格右对齐） ===
+        this.createShovelButton(gridEndX - cardW - 2, cardY, cardW, cardH);
 
-        // === 波次信息 ===
-        const totalWaves = this.isSurvivalMode ? '∞' : this.levelData.waves.length;
-        this.waveText = this.add.text(GAME_WIDTH - 20, 25, `波次: 0/${totalWaves}`, {
-            font: 'bold 16px Arial',
-            fill: '#FFFFFF',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(1, 0.5);
-
-        // === 关卡信息 ===
-        this.add.text(GAME_WIDTH - 20, 50, `关卡 ${this.levelData.name}`, {
-            font: '14px Arial',
-            fill: '#CCCCCC',
-            stroke: '#000000',
-            strokeThickness: 1
-        }).setOrigin(1, 0.5);
-
-        // === 暂停按钮 ===
+        // === 暂停（右上角） ===
         this.createPauseButton();
+
+        this.updateProgressBar();
     }
 
     createPlantCard(x, y, plantType, cfg, width, height) {
         const container = this.add.container(x, y);
         container.setDepth(10);
 
-        // 卡片背景
+        // 卡片背景 - 仿种子包风格
         const bg = this.add.graphics();
-        bg.fillStyle(0x5C3A1E);
+        // 阴影
+        bg.fillStyle(0x000000, 0.35);
+        bg.fillRoundedRect(2, 4, width, height, 6);
+        // 外框
+        bg.fillStyle(0x3D2B10);
+        bg.fillRoundedRect(-1, -1, width + 2, height + 2, 6);
+        // 卡片主体
+        bg.fillStyle(0x7B5E30);
         bg.fillRoundedRect(0, 0, width, height, 5);
-        bg.fillStyle(0x7B4F2A);
-        bg.fillRoundedRect(2, 2, width - 4, height - 25, 4);
+        // 上部浅色区域（图标区）
+        bg.fillStyle(0x8B6C3E);
+        bg.fillRoundedRect(1, 1, width - 2, height - 22, 4);
+        // 下部深色区域（阳光值区）
+        bg.fillStyle(0x5C3A1E);
+        bg.fillRect(1, height - 22, width - 2, 20);
+        // 金色边框线
+        bg.lineStyle(1.5, 0xA08050, 0.7);
+        bg.strokeRoundedRect(0, 0, width, height, 5);
         container.add(bg);
+        // 卡片分隔线
+        const divider = this.add.graphics();
+        divider.lineStyle(1, 0x3D2B10, 0.6);
+        divider.beginPath();
+        divider.moveTo(2, height - 23);
+        divider.lineTo(width - 2, height - 23);
+        divider.strokePath();
+        container.add(divider);
 
         // 选中高亮边框（默认隐藏）
         const selectBorder = this.add.graphics();
-        selectBorder.fillStyle(0xFFD700, 0.4);
-        selectBorder.fillRoundedRect(-2, -2, width + 4, height + 4, 6);
+        selectBorder.fillStyle(0xFFD700, 0.35);
+        selectBorder.fillRoundedRect(-3, -3, width + 6, height + 6, 7);
+        selectBorder.lineStyle(2, 0xFFD700, 0.7);
+        selectBorder.strokeRoundedRect(-3, -3, width + 6, height + 6, 7);
         selectBorder.setVisible(false);
         container.add(selectBorder);
 
@@ -742,18 +787,20 @@ class GameScene extends Phaser.Scene {
     // ===== 传送带系统 =====
 
     createConveyorBackground(startX, cardY, cardWidth, cardHeight, cardSpacing) {
-        // 传送带底栏背景
-        const beltWidth = GAME_WIDTH - startX - 10;
+        const gridW = GRID.cols * GRID.cellWidth;
+        const beltWidth = gridW + 6;
         const beltBg = this.add.graphics();
+        beltBg.setDepth(9);
         beltBg.fillStyle(0x3A2A1A, 0.9);
-        beltBg.fillRoundedRect(startX - 5, cardY - 5, beltWidth, cardHeight + 10, 8);
+        beltBg.fillRoundedRect(startX - 3, cardY - 3, beltWidth, cardHeight + 6, 6);
         beltBg.lineStyle(2, 0x8B6914, 0.8);
-        beltBg.strokeRoundedRect(startX - 5, cardY - 5, beltWidth, cardHeight + 10, 8);
+        beltBg.strokeRoundedRect(startX - 3, cardY - 3, beltWidth, cardHeight + 6, 6);
 
-        // 传送带纹理条纹
         for (let i = 0; i < 20; i++) {
             const sx = startX + i * 35;
+            if (sx > startX + gridW) break;
             const stripe = this.add.graphics();
+            stripe.setDepth(9);
             stripe.fillStyle(0x5A4A2A, 0.3);
             stripe.fillRect(sx, cardY + cardHeight - 12, 20, 8);
         }
@@ -822,13 +869,7 @@ class GameScene extends Phaser.Scene {
         zone.on('pointerdown', () => {
             // 取消铲子模式
             this.shovelActive = false;
-            if (this.shovelButton) {
-                this.shovelButton.bg.clear();
-                this.shovelButton.bg.fillStyle(0x8B4513);
-                this.shovelButton.bg.fillRoundedRect(0, 0, this.shovelButton.width, this.shovelButton.height, 5);
-                this.shovelButton.bg.fillStyle(0xA0522D);
-                this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
-            }
+            this.updateShovelButtonVisual();
 
             // 清除所有普通卡片的高亮
             this.plantCards.forEach(card => {
@@ -858,10 +899,10 @@ class GameScene extends Phaser.Scene {
     }
 
     updateConveyorPositions(animate) {
-        const cardStartX = 175;
-        const cardY = 15;
+        const cardStartX = GRID.startX;
+        const cardY = 33;
         const cardWidth = 55;
-        const cardSpacing = 5;
+        const cardSpacing = 4;
 
         this.conveyorItems.forEach((item, index) => {
             const targetX = cardStartX + index * (cardWidth + cardSpacing);
@@ -901,6 +942,7 @@ class GameScene extends Phaser.Scene {
 
     createShovelButton(x, y, width, height) {
         const container = this.add.container(x, y);
+        container.setDepth(15);
 
         const bg = this.add.graphics();
         bg.fillStyle(0x8B4513);
@@ -937,40 +979,65 @@ class GameScene extends Phaser.Scene {
             this.shovelActive = !this.shovelActive;
             this.selectedPlant = null;
             this.clearCursorPreview();
-            if (this.shovelActive) {
-                bg.clear();
-                bg.fillStyle(0xAA6633);
-                bg.fillRoundedRect(0, 0, width, height, 5);
-            } else {
-                bg.clear();
-                bg.fillStyle(0x8B4513);
-                bg.fillRoundedRect(0, 0, width, height, 5);
-                bg.fillStyle(0xA0522D);
-                bg.fillRoundedRect(2, 2, width - 4, height - 25, 4);
-            }
+            this.updateShovelButtonVisual();
         });
 
         this.shovelButton = { container, bg, zone, width, height };
     }
 
+    updateShovelButtonVisual() {
+        const sb = this.shovelButton;
+        if (!sb) return;
+        const { bg, width, height } = sb;
+        bg.clear();
+        if (this.shovelActive) {
+            bg.fillStyle(0x000000, 0.3);
+            bg.fillRoundedRect(2, 4, width, height, 6);
+            bg.fillStyle(0x8B6914);
+            bg.fillRoundedRect(0, 0, width, height, 5);
+            bg.fillStyle(0xAA8833);
+            bg.fillRoundedRect(1, 1, width - 2, height - 2, 4);
+            bg.fillStyle(0xCCAA44);
+            bg.fillRoundedRect(1, 1, width - 2, height / 2 - 10, 4);
+            bg.lineStyle(2, 0xFFD700, 0.9);
+            bg.strokeRoundedRect(0, 0, width, height, 5);
+        } else {
+            bg.fillStyle(0x000000, 0.3);
+            bg.fillRoundedRect(2, 4, width, height, 6);
+            bg.fillStyle(0x3D2B10);
+            bg.fillRoundedRect(0, 0, width, height, 5);
+            bg.fillStyle(0x7B5E30);
+            bg.fillRoundedRect(1, 1, width - 2, height - 2, 4);
+            bg.fillStyle(0x8B6C3E);
+            bg.fillRoundedRect(1, 1, width - 2, height / 2 - 10, 4);
+            bg.lineStyle(1.5, 0xA08050, 0.6);
+            bg.strokeRoundedRect(0, 0, width, height, 5);
+        }
+    }
+
     onZombieKilled() {
         this.killedZombies++;
+        this.updateProgressBar();
     }
 
     createPauseButton() {
-        const x = GAME_WIDTH - 60;
-        const y = GAME_HEIGHT - 30;
+        const x = GAME_WIDTH - 28;
+        const y = 28;
 
         const bg = this.add.graphics();
-        bg.fillStyle(0x666666, 0.8);
-        bg.fillRoundedRect(x - 30, y - 15, 60, 30, 5);
+        bg.setDepth(60);
+        bg.fillStyle(0x666666, 0.7);
+        bg.fillCircle(x, y, 18);
+        bg.fillStyle(0x888888, 0.5);
+        bg.fillCircle(x, y, 14);
 
-        const text = this.add.text(x, y, '暂停', {
-            font: '14px Arial',
-            fill: '#FFFFFF'
-        }).setOrigin(0.5, 0.5);
+        // 暂停图标（双竖线）
+        bg.fillStyle(0xFFFFFF);
+        bg.fillRect(x - 6, y - 7, 4, 14);
+        bg.fillRect(x + 2, y - 7, 4, 14);
 
-        const zone = this.add.zone(x, y, 60, 30).setInteractive({ useHandCursor: true });
+        const zone = this.add.zone(x, y, 40, 40).setInteractive({ useHandCursor: true });
+        zone.setDepth(61);
         zone.on('pointerdown', () => {
             this.togglePause();
         });
@@ -1134,25 +1201,9 @@ class GameScene extends Phaser.Scene {
             card.container.setScale(1);
         });
 
-        // 取消铲子
-        this.shovelActive = false;
-        if (this.shovelButton) {
-            this.shovelButton.bg.clear();
-            this.shovelButton.bg.fillStyle(0x8B4513);
-            this.shovelButton.bg.fillRoundedRect(0, 0, this.shovelButton.width, this.shovelButton.height, 5);
-            this.shovelButton.bg.fillStyle(0xA0522D);
-            this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
-        }
-
         // 取消铲子模式
         this.shovelActive = false;
-        if (this.shovelButton) {
-            this.shovelButton.bg.clear();
-            this.shovelButton.bg.fillStyle(0x8B4513);
-            this.shovelButton.bg.fillRoundedRect(0, 0, this.shovelButton.width, this.shovelButton.height, 5);
-            this.shovelButton.bg.fillStyle(0xA0522D);
-            this.shovelButton.bg.fillRoundedRect(2, 2, this.shovelButton.width - 4, this.shovelButton.height - 25, 4);
-        }
+        this.updateShovelButtonVisual();
 
         // 如果点击的是已选中的植物，取消选择
         if (this.selectedPlant === plantType) {
@@ -1361,6 +1412,101 @@ class GameScene extends Phaser.Scene {
     updateSunDisplay() {
         this.sunText.setText(String(this.sunAmount));
         this.updateCardAvailability();
+    }
+
+    updateProgressBar() {
+        if (!this.progressBar || this.isSurvivalMode) return;
+
+        const bar = this.progressBar;
+        const progress = Math.min(this.killedZombies / this.totalZombies, 1);
+
+        if (Math.abs(progress - bar.lastProgress) < 0.001 && bar.lastProgress >= 0) return;
+        bar.lastProgress = progress;
+
+        bar.fillBar.clear();
+        if (progress > 0) {
+            const fillWidth = bar.width * progress;
+            bar.fillBar.fillStyle(0xCC2222);
+            bar.fillBar.fillRoundedRect(bar.x, bar.y, fillWidth, bar.height, 3);
+            bar.fillBar.fillStyle(0xFF5555, 0.5);
+            bar.fillBar.fillRoundedRect(bar.x, bar.y, fillWidth, bar.height / 2, 3);
+        }
+
+        const headX = bar.x + bar.width * progress;
+        bar.drawZombieHead(bar.zombieHead, headX, bar.y + bar.height / 2, bar.headSize);
+        bar.progressText.setText(Math.round(progress * 100) + '%');
+    }
+
+    showIntroAnimation() {
+        this.isIntroPlaying = true;
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 0.55);
+        overlay.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        overlay.setDepth(999);
+
+        const cx = GAME_WIDTH / 2;
+        const cy = GAME_HEIGHT / 2;
+
+        const readyText = this.add.text(cx, cy - 20, '准备...', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '80px',
+            fontStyle: 'bold',
+            color: '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 8,
+            shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 8, fill: true }
+        }).setOrigin(0.5).setAlpha(0).setScale(0.3).setDepth(1000);
+
+        this.tweens.add({
+            targets: readyText,
+            alpha: 1, scale: 1,
+            duration: 500, ease: 'Back.easeOut'
+        });
+
+        this.time.delayedCall(900, () => {
+            this.tweens.add({
+                targets: readyText,
+                alpha: 0, scale: 1.8, y: cy - 80,
+                duration: 400, ease: 'Power2',
+                onComplete: () => {
+                    readyText.destroy();
+
+                    const plantText = this.add.text(cx, cy, '种植！', {
+                        fontFamily: 'Arial, sans-serif',
+                        fontSize: '100px',
+                        fontStyle: 'bold',
+                        color: '#00FF44',
+                        stroke: '#000000',
+                        strokeThickness: 10,
+                        shadow: { offsetX: 4, offsetY: 4, color: '#000', blur: 10, fill: true }
+                    }).setOrigin(0.5).setAlpha(0).setScale(2.5).setDepth(1000);
+
+                    this.cameras.main.shake(250, 0.012);
+
+                    this.tweens.add({
+                        targets: plantText,
+                        alpha: 1, scale: 1,
+                        duration: 500, ease: 'Back.easeOut',
+                        onComplete: () => {
+                            this.time.delayedCall(800, () => {
+                                plantText.setColor('#FFD700');
+                                this.tweens.add({
+                                    targets: [plantText, overlay],
+                                    alpha: 0, scale: 1.5,
+                                    duration: 600, ease: 'Power2',
+                                    onComplete: () => {
+                                        plantText.destroy();
+                                        overlay.destroy();
+                                        this.isIntroPlaying = false;
+                                        this.startNextWave();
+                                    }
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        });
     }
 
     startNextWave() {
@@ -1912,6 +2058,9 @@ class GameScene extends Phaser.Scene {
 
         // 清理
         this.cleanup();
+
+        // 更新僵尸进度条
+        this.updateProgressBar();
 
         // 更新僵尸计数
         this.zombiesRemaining = this.zombies.filter(z => z && z.alive).length;

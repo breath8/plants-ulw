@@ -8,7 +8,7 @@ const GAME_HEIGHT = 600;
 const GRID = {
     rows: 5,
     cols: 9,
-    startX: 220,      // 草坪起始X
+    startX: 152,      // 草坪起始X（居中）
     startY: 95,       // 草坪起始Y
     cellWidth: 80,
     cellHeight: 100

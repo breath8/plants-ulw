@@ -34,24 +34,68 @@ class MenuScene extends Phaser.Scene {
             bg.fillEllipse(x, y, 8, 15);
         }
 
-        // 标题背景
-        const titleBg = this.add.graphics();
-        titleBg.fillStyle(0x000000, 0.3);
-        titleBg.fillRoundedRect(width / 2 - 280, 60, 560, 120, 20);
+        // 标题木牌
+        const signW = 540;
+        const signH = 120;
+        const signX = width / 2 - signW / 2;
+        const signY = 38;
 
-        // 标题
-        const title = this.add.text(width / 2, 100, '植物大战僵尸', {
-            font: 'bold 52px Arial',
+        const titleBg = this.add.graphics();
+        // 阴影
+        titleBg.fillStyle(0x1A0E05, 0.5);
+        titleBg.fillRoundedRect(signX + 2, signY + 4, signW, signH, 14);
+        // 外框
+        titleBg.fillStyle(0x3D2B10);
+        titleBg.fillRoundedRect(signX - 4, signY - 4, signW + 8, signH + 8, 14);
+        // 主体棕色
+        titleBg.fillStyle(0x6B4226);
+        titleBg.fillRoundedRect(signX, signY, signW, signH, 12);
+        // 木纹
+        titleBg.lineStyle(1, 0x5A3520, 0.4);
+        for (let i = 0; i < 10; i++) {
+            const ly = signY + 6 + i * 12;
+            titleBg.beginPath();
+            titleBg.moveTo(signX + 10, ly);
+            titleBg.lineTo(signX + signW - 10, ly + Phaser.Math.Between(-1, 1));
+            titleBg.strokePath();
+        }
+        // 上部高光
+        titleBg.fillStyle(0x8B6234, 0.35);
+        titleBg.fillRoundedRect(signX + 4, signY + 4, signW - 8, signH / 2 - 6, { tl: 10, tr: 10, bl: 0, br: 0 });
+        // 下部暗影
+        titleBg.fillStyle(0x3D2B10, 0.25);
+        titleBg.fillRoundedRect(signX + 4, signY + signH / 2 + 2, signW - 8, signH / 2 - 8, { tl: 0, tr: 0, bl: 10, br: 10 });
+        // 边框线
+        titleBg.lineStyle(2, 0xA08050, 0.3);
+        titleBg.strokeRoundedRect(signX + 1, signY + 1, signW - 2, signH - 2, 11);
+        // 四角铆钉
+        [
+            [signX + 20, signY + 20],
+            [signX + signW - 20, signY + 20],
+            [signX + 20, signY + signH - 20],
+            [signX + signW - 20, signY + signH - 20]
+        ].forEach(([nx, ny]) => {
+            titleBg.fillStyle(0x8B7355);
+            titleBg.fillCircle(nx, ny, 7);
+            titleBg.fillStyle(0xA08B6A);
+            titleBg.fillCircle(nx - 1, ny - 1, 4);
+            titleBg.fillStyle(0xC0A880, 0.6);
+            titleBg.fillCircle(nx - 2, ny - 2, 2);
+        });
+
+        // 标题文字
+        const title = this.add.text(width / 2, signY + signH / 2 - 10, '植物大战僵尸', {
+            font: 'bold 48px "Microsoft YaHei", "SimHei", Arial',
             fill: '#FFD700',
-            stroke: '#000000',
-            strokeThickness: 6,
-            shadow: { offsetX: 3, offsetY: 3, color: '#000', blur: 5, fill: true }
+            stroke: '#5C3A1E',
+            strokeThickness: 7,
+            shadow: { offsetX: 3, offsetY: 4, color: '#2A1A08', blur: 6, fill: true }
         }).setOrigin(0.5, 0.5);
 
-        const subtitle = this.add.text(width / 2, 150, '复刻版 - 冒险模式 + 额外模式', {
-            font: 'bold 20px Arial',
-            fill: '#FFFFFF',
-            stroke: '#000000',
+        const subtitle = this.add.text(width / 2, signY + signH / 2 + 34, 'Plants vs. Zombies · 复刻版', {
+            font: '15px "Microsoft YaHei", "SimHei", Arial',
+            fill: '#E8D8B0',
+            stroke: '#3D2B10',
             strokeThickness: 3
         }).setOrigin(0.5, 0.5);
 
